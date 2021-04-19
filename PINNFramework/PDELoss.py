@@ -5,8 +5,9 @@ from torch.nn import MSELoss, L1Loss
 from .LossTerm import LossTerm
 import numpy as np
 
+
 class PDELoss(LossTerm):
-    def __init__(self, dataset, pde, norm='L2', weight=1.):
+    def __init__(self, dataset, pde, quad_weights=[], norm='L2', weight=1.):
         """
         Constructor of the PDE Loss
 
@@ -19,28 +20,39 @@ class PDELoss(LossTerm):
         super(PDELoss, self).__init__(dataset, norm, weight)
         self.dataset = dataset
         self.pde = pde
-    
-
-    def __call__(self, x: Tensor, model: Module, loss = torch.nn.MSELoss(), **kwargs):
+        self.quad_weights = quad_weights
+        self.norm = norm
+    def __call__(self, x: Tensor, model: Module, **kwargs):
         """
         Call function of the PDE loss. Calculates the norm of the PDE residual
 
         x: residual points
         model: model that predicts the solution of the PDE
         """
-        def FT(f_i,x, shift,C_b):
-            N_2 = int(len(f_i)/2)
-            zer = torch.Tensor([0])
-            im_shift = torch.Tensor([2*np.pi*shift*torch.sum(x)])
-            F_y= torch.tensor([torch.complex(C_b[b][0],C_b[b][1])*
-                               torch.exp(torch.complex(zer,torch.Tensor([2*np.pi*b*(torch.sum(x))])))
-                               for b in range(-N_2,N_2)])
-            f_star = (torch.exp(torch.complex(zer,im_shift))*torch.sum(F_y))
-            return torch.tensor([torch.real(f_star), torch.imag(f_star)],requires_grad=False)
-        x.requires_grad = True # setting requires grad to true in order to calculate
+        x.requires_grad = True  # setting requires grad to true in order to calculate
         u = model.forward(x)
-        #C_b=torch.fft(u_r,1)
-        #u = torch.stack([FT(u_r,x[i],1,C_b) for i in range(len(x))],0)
         pde_residual = self.pde(x, u, **kwargs)
-        zeros = torch.zeros(pde_residual.shape, device=pde_residual.device)
-        return loss(pde_residual, zeros)
+        if self.norm == 'Mse':
+            zeros = torch.zeros(pde_residual.shape, device=pde_residual.device)
+            loss = torch.nn.MSELoss()(pde_residual, zeros)
+        elif self.norm == 'Quad':
+            quad_loss = (np.sum([torch.sum(torch.square(pde_residual[i])) * self.quad_weights[i] for i in
+                                 range(len(pde_residual))]) ** (1 / 2))
+            loss = quad_loss
+        elif self.norm == 'Wass':
+            prediction = u
+            M = [[(i - j) ** 2 for i in range(len(prediction))] for j in range(len(prediction))]
+            min_u = abs(min((prediction.detach().numpy()[:, 0]))) + 0.01
+            C_x = np.sum(prediction.detach().numpy()[:, 0] + min_u)
+            u_r = (prediction.detach().numpy()[:, 0] + min_u) / C_x
+            min_gt = abs(min((gt_y[:, 0]))) + 0.01
+            D_x = torch.sum(gt_y[:, 0] + min_gt)
+            v_r = ((gt_y[:, 0] + min_gt) / D_x).detach().numpy()
+            # quad_loss = (np.sum([torch.sum(torch.square(ini_residual[i] * self.quad_weights[i])) for i in
+            #                     range(len(ini_residual))]) ** (1 / 2))
+            loss = ot.sinkhorn2(np.array(u_r), np.array(v_r), np.array(M), 0.8)[0]
+            # ot.sinkhorn_unbalanced2(u_r, v_r, np.array(M), 0.9, 0.9)[0]
+            print('loss', loss)
+        else:
+            raise ValueError('Loss not defined')
+        return loss*0

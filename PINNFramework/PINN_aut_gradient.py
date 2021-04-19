@@ -7,6 +7,7 @@ from .BoundaryCondition import BoundaryCondition, PeriodicBC, DirichletBC, Neuma
 from .PDELoss import PDELoss
 from .JoinedDataset import JoinedDataset
 from .HPMLoss import HPMLoss
+#from .L2_loss import PDELoss2
 try:
     import horovod.torch as hvd
 except:
@@ -15,7 +16,7 @@ except:
 class PINN(nn.Module):
 
     def __init__(self, model: torch.nn.Module, input_dimension: int, output_dimension: int,
-                 pde_loss: PDELoss, initial_condition: InitialCondition,Loss_meas, boundary_condition,test_loss,
+                 pde_loss: PDELoss, initial_condition: InitialCondition,Loss_meas, boundary_condition,
                  use_gpu=True, use_horovod=False):
         """
         Initializes an physics-informed neural network (PINN). A PINN consists of a model which represents the solution
@@ -40,7 +41,6 @@ class PINN(nn.Module):
         self.use_gpu = use_gpu
         self.use_horovod = use_horovod
         self.rank = 0 # initialize rank 0 by default in order to make the fit method more flexible
-        self.test_loss = test_loss
         if self.use_horovod:
             # Initialize Horovod
             hvd.init()
@@ -260,7 +260,8 @@ class PINN(nn.Module):
         if type(training_data["Initial_Condition"]) is list:
             # initial condition loss
             if len(training_data["Initial_Condition"]) == 2:
-                pinn_loss = pinn_loss + self.initial_condition_m(training_data["Initial_Condition"][0][0].type(self.dtype), self.model,
+                pinn_loss = pinn_loss + self.initial_condition_m.(training_data["Initial_Condition"][0][0].type(self.dtype),
+                                                               self.model,
                                                                training_data["Initial_Condition"][1][0].type(self.dtype))
             else:
                 raise ValueError("Training Data for initial condition is a tuple (x,y) with x the  input coordinates"
@@ -281,6 +282,7 @@ class PINN(nn.Module):
                 pinn_loss = pinn_loss + self.calculate_boundary_condition(self.boundary_condition_m,
                                                                           training_data[self.boundary_condition.name])
         return pinn_loss
+
 
     def fit(self, epochs, optimizer='Adam', learning_rate=1e-3, lbfgs_finetuning=True,
             writing_cylcle= 30, save_model=True, pinn_path='best_model_pinn.pt', hpm_path='best_model_hpm.pt'):
@@ -339,7 +341,6 @@ class PINN(nn.Module):
                     pinn_loss.backward()
                     return pinn_loss
 
-
         minimum_pinn_loss = float("inf")
         if self.use_horovod:
             # Partition dataset among workers using DistributedSampler
@@ -361,10 +362,8 @@ class PINN(nn.Module):
             for training_data in data_loader:
                 training_data = training_data
                 optim.zero_grad()
-                # Compute and print loss
-                pinn_loss =self.pinn_loss(training_data) #self.test_loss.forward(training_data["Initial_Condition"][0][0].type(self.dtype), self.model, training_data["Initial_Condition"][1][0].type(self.dtype))#
+                pinn_loss = self.pinn_loss(training_data)
                 pinn_loss.backward()
-                #pinn_loss.backward()
                 if not self.rank:
                     print("PINN Loss {} Epoch {} from {}".format(pinn_loss, epoch, epochs))
                 optim.step()

@@ -1,12 +1,14 @@
 from .LossTerm import LossTerm
 from torch.autograd import grad
 from torch import ones
-
+import torch
+import numpy as np
+import ot
 
 class BoundaryCondition(LossTerm):
-    def __init__(self, name, dataset, norm='L2', weight=1.):
+    def __init__(self, name, dataset, weight=1.):
         self.name = name
-        super(BoundaryCondition, self).__init__(dataset, norm, weight)
+        super(BoundaryCondition, self).__init__(dataset, weight)
 
     def __call__(self, *args, **kwargs):
         raise NotImplementedError("The call function of the Boundary Condition has to be implemented")
@@ -17,14 +19,38 @@ class DirichletBC(BoundaryCondition):
     Dirichlet boundary conditions: y(x) = func(x).
     """
 
-    def __init__(self, func, dataset, name, norm='L2',weight=1.):
-        super(DirichletBC, self).__init__(name, dataset, norm, weight)
+    def __init__(self, func, dataset ,name, quad_weights=0,  norm = 'L2',weight=1.):
+        super(DirichletBC, self).__init__(name, dataset, weight)
         self.func = func
-
+        self.norm = norm
+        self.quad_weights = quad_weights
     def __call__(self, x, model):
         prediction = model(x)  # is equal to y
-        return self.weight * self.norm(prediction, self.func(x))
+        ini_residual = (prediction - self.func(x))
+        if self.norm == 'Mse':
+            zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
+            loss = torch.nn.MSELoss()(ini_residual,zeros)
+        elif self.norm== 'Quad':
+            quad_loss = (np.sum([torch.sum(torch.square(ini_residual[i])) * self.quad_weights[i] for i in
+                                 range(len(ini_residual))]) ** (1 / 2))
+            loss = quad_loss
+        elif self.norm == 'Wass':
+            gt_y= self.func(x)
+            M = [[(i-j)**2 for i in range(len(prediction))] for j in range(len(prediction))]
+            min_u = abs(min((prediction.detach().numpy()[:,0])))+0.01
+            C_x = np.sum(prediction.detach().numpy()[:,0]+min_u)
+            u_r = (prediction.detach().numpy()[:,0]+ min_u)/C_x
+            min_gt = abs(min((gt_y[:,0])))+0.01
+            D_x = torch.sum(gt_y[:,0] + min_gt)
+            v_r = ((gt_y[:,0]+ min_gt)/D_x).detach().numpy()
+            loss = ot.sinkhorn2(np.array(u_r), np.array(v_r), np.array(M),0.8)[0]
+            #ot.sinkhorn_unbalanced2(u_r, v_r, np.array(M), 0.9, 0.9)[0]
+            print('loss',loss)
+        else:
+            raise ValueError('Loss not defined')
 
+        #loss = self.weight * self.norm(prediction, self.func(x))*0 #Just for testing the initial condition Loss
+        return self.weight*loss*0
 
 class NeumannBC(BoundaryCondition):
     """
