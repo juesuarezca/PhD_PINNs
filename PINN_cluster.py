@@ -1,21 +1,3 @@
-import sys
-import numpy as np
-import scipy
-import scipy.io
-from pyDOE import lhs
-from torch import Tensor, ones, stack, load
-from torch.autograd import grad
-from torch.utils.data import Dataset
-#import mintegpy as mp
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import h5py as h5
-import os
-import torch
-#sys.path.append('/Users/juanesteban')
-import PINNFramework as pf
-import sympy as sp
-from mpl_toolkits.mplot3d import Axes3D 
 e_l, DIM, DEG, LP, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])]
 #Parameters
 POINTKIND = 'gauss_leg'#'leja'
@@ -35,7 +17,7 @@ def Herm_pol(n):
     return Hn
 def Psi (x,y,t,f):
     Hn= Herm_pol(e_l)
-    return sp.exp(1j*0)*1/(2**e_l*scipy.math.factorial(e_l))*(np.pi**(-1/4))*np.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y)
+    return 1/(2**e_l*scipy.math.factorial(e_l))*(np.pi**(-1/4))*np.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y)
 
 def eigenvalue (ev):
     a =  sp.Symbol('a')
