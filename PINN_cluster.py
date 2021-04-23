@@ -338,7 +338,6 @@ loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3)
 pinn_3 = pf.PINN(model_3, 3, 2, pde_loss_3, initial_condition, performance_var, [dirichlet_bc_3], use_gpu=False)
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3)
 
-%matplotlib notebook
 #Produce plots
 folder = '/Users/juanesteban/PhD_PINNs/Results_Simulation/'
 
