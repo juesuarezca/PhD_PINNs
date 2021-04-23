@@ -23,7 +23,6 @@ class PDELoss(LossTerm):
         self.pde = pde
         self.quad_weights = quad_weights
         self.norm = norm
-        self.func = func
         self.func_left = func_left
         self.func_right = func_right
     def __call__(self, x: Tensor, model: Module, **kwargs):
