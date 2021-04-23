@@ -16,7 +16,7 @@ import torch
 import PINNFramework as pf
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D 
-el, DIM, LP, n_epochs = [sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3]]
+e_l, DIM, LP, n_epochs = [sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3]]
 #Parameters
 POINTKIND = 'gauss_leg'#'leja'
 USEDATA = False
