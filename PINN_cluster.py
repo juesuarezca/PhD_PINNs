@@ -34,9 +34,11 @@ def Herm_pol(n):
     Hn = sp.lambdify(p,sp.simplify((-1)**n*d_n*sp.exp(p**2)))
     return Hn
 def Psi (x,y,t,f):
+    x = torch.Tensor(x)
+    y=torch.Tensor(y)
     Hn= Herm_pol(e_l)
-    return torch.exp([1j*0])*torch.tensor(1/(2**e_l*scipy.math.factorial(e_l))*(np.pi**(-1/4))*np.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y))
-
+    psi_t = torch.exp(torch.complex(torch.Tensor([0]),torch.Tensor([0])))
+    return psi_t*1/(2**e_l*scipy.math.factorial(e_l))*(np.pi**(-1/4))*torch.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y)
 def eigenvalue (ev):
     a =  sp.Symbol('a')
     b =  sp.Symbol('b')
