@@ -16,7 +16,7 @@ sys.path.append('/Users/juanesteban')
 import PINNFramework as pf
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D 
-el, DIM, LP, n_epochs = [sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3]]
+e_l, DIM, DEG, LP, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])]
 #Parameters
 POINTKIND = 'gauss_leg'#'leja'
 USEDATA = False
@@ -305,7 +305,7 @@ if __name__ == "__main__":
         dirichlet_bc = pf.DirichletBC(func=hom_dir, dataset=bc_dataset, quad_weights=Datasets[1][0]  , name='Dirichlet BC', norm=Norm)
         # Residual Terms
         pde_dataset = PDEDataset(Datasets[0][1])
-        pde_loss = pf.PDELoss(pde_dataset, schroedinger1d,func= residual_check,
+        pde_loss = pf.PDELoss(pde_dataset, schroedinger1d,
                               func_left = res_left, func_right = res_right,
                               quad_weights=Datasets[1][1], norm=Norm)
         #Initial Condition Term
