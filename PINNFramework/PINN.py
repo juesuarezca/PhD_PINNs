@@ -15,7 +15,7 @@ except:
 class PINN(nn.Module):
 
     def __init__(self, model: torch.nn.Module, input_dimension: int, output_dimension: int,
-                 pde_loss: PDELoss, initial_condition: InitialCondition,Loss_meas, boundary_condition,test_loss,
+                 pde_loss: PDELoss, initial_condition: InitialCondition, Loss_meas , boundary_condition,
                  use_gpu=True, use_horovod=False):
         """
         Initializes an physics-informed neural network (PINN). A PINN consists of a model which represents the solution
@@ -40,7 +40,6 @@ class PINN(nn.Module):
         self.use_gpu = use_gpu
         self.use_horovod = use_horovod
         self.rank = 0 # initialize rank 0 by default in order to make the fit method more flexible
-        self.test_loss = test_loss
         if self.use_horovod:
             # Initialize Horovod
             hvd.init()
@@ -276,10 +275,10 @@ class PINN(nn.Module):
         if not self.is_hpm:
             if isinstance(self.boundary_condition_m, list):
                 for bc in self.boundary_condition_m:
-                    pinn_loss = pinn_loss + self.calculate_boundary_condition(bc, training_data[bc.name])
+                    pinn_loss = pinn_loss + self.calculate_boundary_condition(bc, training_data[bc.name])*0
             else:
                 pinn_loss = pinn_loss + self.calculate_boundary_condition(self.boundary_condition_m,
-                                                                          training_data[self.boundary_condition.name])
+                                                                          training_data[self.boundary_condition.name])*0
         return pinn_loss
 
     def fit(self, epochs, optimizer='Adam', learning_rate=1e-3, lbfgs_finetuning=True,
@@ -358,19 +357,20 @@ class PINN(nn.Module):
             data_loader_m = DataLoader(self.dataset_m, batch_size=1)
         LOSS = []
         for epoch in range(epochs):
+            for measure_data in data_loader_m:
+                meas_loss = self.pinn_loss_mse(measure_data)
+                print('Measure Loss',meas_loss)
+                LOSS.append(meas_loss)
             for training_data in data_loader:
-                training_data = training_data
+                #training_data = training_data
                 optim.zero_grad()
                 # Compute and print loss
-                pinn_loss =self.pinn_loss(training_data) #self.test_loss.forward(training_data["Initial_Condition"][0][0].type(self.dtype), self.model, training_data["Initial_Condition"][1][0].type(self.dtype))#
+                pinn_loss =self.pinn_loss(training_data)
                 pinn_loss.backward()
-                #pinn_loss.backward()
                 if not self.rank:
                     print("PINN Loss {} Epoch {} from {}".format(pinn_loss, epoch, epochs))
                 optim.step()
                 ###Compute measure Loss
-                for measure_data in data_loader_m:
-                    LOSS.append(self.pinn_loss_mse(measure_data))
                 #-----------------------------
             if (pinn_loss < minimum_pinn_loss) and not (epoch % writing_cylcle) and save_model and not self.rank:
                 self.save_model(pinn_path, hpm_path)
@@ -381,4 +381,5 @@ class PINN(nn.Module):
             print("After LBFGS-B: PINN Loss {} Epoch {} from {}".format(pinn_loss, epoch, epochs))
             if (pinn_loss < minimum_pinn_loss) and not (epoch % writing_cylcle) and save_model:
                 self.save_model(pinn_path, hpm_path)
+                print(pinn_path, hpm_path)
         return torch.tensor(LOSS)

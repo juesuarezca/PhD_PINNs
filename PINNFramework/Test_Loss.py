@@ -13,6 +13,7 @@ class My_Loss(LossTerm):
         super(My_Loss, self).__init__(dataset, norm, weight)
         self.quad_weights = quad_weights
         self.norm = 'Wass'
+
     def forward(self, x, model, gt_y):
         """
                 This function returns the loss for the initial condition
@@ -34,16 +35,89 @@ class My_Loss(LossTerm):
             loss = quad_loss
             print(loss)
         elif self.norm == 'Wass':
-            M = [[(i - j) ** 2 for i in range(len(prediction))] for j in range(len(prediction))]
-            min_u = np.abs(min((mg.Tensor(prediction.detach().numpy()[:, 0])))) + 0.01
-            C_x = np.max(mg.Tensor(prediction.detach().numpy()[:, 0]) + min_u)
-            u_r = (mg.Tensor(prediction.detach().numpy()[:, 0] )+ min_u) / C_x
-            min_gt = np.abs(min((gt_y[:, 0]))) + 0.01
+            M = torch.Tensor([[(i - j) ** 2 for i in range(len(prediction))] for j in range(len(prediction))])
+            min_u = torch.abs(min((prediction[:, 0]))) + 0.01
+            C_x = torch.sum(prediction[:, 0] + min_u)
+            u_r = (prediction[:, 0]+ min_u) / C_x
+            min_gt = torch.abs(min((gt_y[:, 0]))) + 0.01
             D_x = torch.sum(gt_y[:, 0] + min_gt)
-            v_r = ((gt_y[:, 0] + min_gt) / D_x).detach().numpy()
-            # quad_loss = (np.sum([torch.sum(torch.square(ini_residual[i] * self.quad_weights[i])) for i in
-            #                     range(len(ini_residual))]) ** (1 / 2))
-            loss = ot.sinkhorn2(np.array(u_r), np.array(v_r), np.array(M), 0.8)[0]
+            v_r = (gt_y[:, 0] + min_gt) / D_x
+
+            def sinkhorn_normalized(x, y, epsilon, n, niter):
+
+                Wxy = sinkhorn_loss(x, y, epsilon, n, niter)
+                Wxx = sinkhorn_loss(x, x, epsilon, n, niter)
+                Wyy = sinkhorn_loss(y, y, epsilon, n, niter)
+                return 2 * Wxy - Wxx - Wyy
+
+            def cost_matrix(x, y, p=2):
+                print(x.shape)
+                "Returns the matrix of $|x_i-y_j|^p$."
+                x_col = x.unsqueeze(1)
+                y_lin = y.unsqueeze(0)
+                c = torch.sum((torch.abs(x_col - y_lin)) ** p, 2)
+                return c
+
+            def sinkhorn_loss(x, y, M, epsilon, niter):
+                """
+                Given two emprical measures with n points each with locations x and y
+                outputs an approximation of the OT cost with regularization parameter epsilon
+                niter is the max. number of steps in sinkhorn loop
+                """
+                n = len(x)
+                # The Sinkhorn algorithm takes as input three variables :
+                C = Variable(M)  # Wasserstein cost function
+
+                # both marginals are fixed with equal weights
+                # mu = Variable(1. / n * torch.cuda.FloatTensor(n).fill_(1), requires_grad=False)
+                # nu = Variable(1. / n * torch.cuda.FloatTensor(n).fill_(1), requires_grad=False)
+                mu = Variable(1. / n * torch.FloatTensor(n).fill_(1), requires_grad=False)
+                nu = Variable(1. / n * torch.FloatTensor(n).fill_(1), requires_grad=False)
+
+                # Parameters of the Sinkhorn algorithm.
+                rho = 1  # (.5) **2          # unbalanced transport
+                tau = -.8  # nesterov-like acceleration
+                lam = rho / (rho + epsilon)  # Update exponent
+                thresh = 10 ** (-1)  # stopping criterion
+
+                # Elementary operations .....................................................................
+                def ave(u, u1):
+                    "Barycenter subroutine, used by kinetic acceleration through extrapolation."
+                    return tau * u + (1 - tau) * u1
+
+                def M(u, v):
+                    "Modified cost for logarithmic updates"
+                    "$M_{ij} = (-c_{ij} + u_i + v_j) / \epsilon$"
+                    return (-C + u.unsqueeze(1) + v.unsqueeze(0)) / epsilon
+
+                def lse(A):
+                    "log-sum-exp"
+                    return torch.log(torch.exp(A).sum(1, keepdim=True) + 1e-6)  # add 10^-6 to prevent NaN
+
+                # Actual Sinkhorn loop ......................................................................
+                u, v, err = 0. * mu, 0. * nu, 0.
+                actual_nits = 0  # to check if algorithm terminates because of threshold or max iterations reached
+
+                for i in range(niter):
+                    u1 = u  # useful to check the update
+                    u = epsilon * (torch.log(mu) - lse(M(u, v)).squeeze()) + u
+                    v = epsilon * (torch.log(nu) - lse(M(u, v).t()).squeeze()) + v
+                    # accelerated unbalanced iterations
+                    # u = ave( u, lam * ( epsilon * ( torch.log(mu) - lse(M(u,v)).squeeze()   ) + u ) )
+                    # v = ave( v, lam * ( epsilon * ( torch.log(nu) - lse(M(u,v).t()).squeeze() ) + v ) )
+                    err = (u - u1).abs().sum()
+
+                    actual_nits += 1
+                    if (err < thresh).data.numpy():
+                        break
+                U, V = u, v
+                pi = torch.exp(M(U, V))  # Transport plan pi = diag(a)*K*diag(b)
+                cost = torch.sum(pi * C)  # Sinkhorn cost
+
+                return cost
+
+            loss = sinkhorn_loss(u_r, v_r,M, 0.01, 100)
+            #loss = ot.sinkhorn2(np.array(u_r), np.array(v_r), np.array(M), 0.8)[0]
             # ot.sinkhorn_unbalanced2(u_r, v_r, np.array(M), 0.9, 0.9)[0]
             print('loss', loss)
         elif self.norm == 's_e':
@@ -53,30 +127,4 @@ class My_Loss(LossTerm):
             raise ValueError('Loss not defined')
         return loss * self.weight
 
-class My_Loss2(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, mu, nu, dist, lam=1e-3, N=100):
-        assert mu.dim() == 2 and nu.dim() == 2 and dist.dim() == 2
-        bs = mu.size(0)
-        d1, d2 = dist.size()
-        assert nu.size(0) == bs and mu.size(1) == d1 and nu.size(1) == d2
-        log_mu = mu.log()
-        log_nu = nu.log()
-        log_u = torch.full_like(mu, -math.log(d1))
-        log_v = torch.full_like(nu, -math.log(d2))
-        for i in range(N):
-            log_v = sinkstep(dist, log_nu, log_u, lam)
-            log_u = sinkstep(dist.t(), log_mu, log_v, lam)
 
-        # this is slight abuse of the function. it computes (diag(exp(log_u))*Mt*exp(-Mt/lam)*diag(exp(log_v))).sum()
-        # in an efficient (i.e. no bxnxm tensors) way in log space
-        distances = (-sinkstep(-dist.log()+dist/lam, -log_v, log_u, 1.0)).logsumexp(1).exp()
-        ctx.log_v = log_v
-        ctx.log_u = log_u
-        ctx.dist = dist
-        ctx.lam = lam
-        return distances
-
-    @staticmethod
-    def backward(ctx, grad_out):
-        return grad_out[:, None] * ctx.log_u * ctx.lam, grad_out[:, None] * ctx.log_v * ctx.lam, None, None, None
