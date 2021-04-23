@@ -35,7 +35,7 @@ def Herm_pol(n):
     return Hn
 def Psi (x,y,t,f):
     Hn= Herm_pol(e_l)
-    return np.exp(-1j*0)*1/(2**e_l*scipy.math.factorial(e_l))*(np.pi**(-1/4))*np.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y)
+    return 1/(2**e_l*scipy.math.factorial(e_l))*(np.pi**(-1/4))*np.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y)
 
 def eigenvalue (ev):
     a =  sp.Symbol('a')
