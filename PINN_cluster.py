@@ -341,7 +341,7 @@ pinn_3 = pf.PINN(model_3, 3, 2, pde_loss_3, initial_condition, performance_var, 
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3)
 
 #Produce plots
-folder = 'PhD_PINNs/Results_Simulation/'
+folder = 'Results_Simulation/'
 
 fig = plt.figure()
 # ax2 = fig.add_subplot(2, 1, 1)
