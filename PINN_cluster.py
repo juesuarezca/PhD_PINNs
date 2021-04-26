@@ -16,7 +16,6 @@ import torch
 import PINNFramework as pf
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D 
-import horovod.torch as hvd
 e_l, DIM, DEG, LP, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])]
 #Parameters
 POINTKIND = 'gauss_leg'#'leja'
@@ -342,16 +341,18 @@ pinn_3 = pf.PINN(model_3, 3, 2, pde_loss_3, initial_condition, performance_var, 
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3)
 
 #Produce plots
-folder = '/Users/juanesteban/PhD_PINNs/Results_Simulation/'
+folder = 'PhD_PINNs/Results_Simulation/'
 
 fig = plt.figure()
 # ax2 = fig.add_subplot(2, 1, 1)
 plt.plot(loss_1.numpy(), label='MSE Loss')
 plt.plot(loss_2.numpy(), label='Quadrature Loss')
 plt.plot(loss_3.numpy(), label='Wasserstein Loss')
+plt.xlabel('Epoch')
+plt.ylabel('MSE Performance')
+plt.title('$\lambda$: '+str(e_l)+', Degree: '+str(DEG))
 plt.legend()
-plt.ylim(0,0.5)
-#plt.savefig(folder + 'Loss_Wass.png')
+plt.savefig(folder + 'Loss_Quad_'+str(e_l)+'_'+str(DEG)+'.png')
 plt.show()
 
 x_t = np.linspace(lb[0], ub[0])
@@ -367,6 +368,10 @@ fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
 c1 = ax.plot_surface(X_m, Y_m, PRED_1[:,:,0].detach().numpy(),label='Trained Psi',
                     color='blue')
+c1 = ax.plot_surface(X_m, Y_m, PRED_2[:,:,0].detach().numpy(),label='Trained Psi',
+                    color='green')
+c1 = ax.plot_surface(X_m, Y_m, PRED_3[:,:,0].detach().numpy(),label='Trained Psi',
+                    color='orange')
 c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real,label ='Real Psi',color = 'red')
-plt.savefig('3d_Surface.jpg')
+plt.savefig(folder + 'Surface_Quad_'+str(e_l)+'_'+str(DEG)+'.png')
 plt.show()
