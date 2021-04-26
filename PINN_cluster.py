@@ -353,7 +353,6 @@ plt.ylabel('MSE Performance')
 plt.title('$\lambda$: '+str(e_l)+', Degree: '+str(DEG))
 plt.legend()
 plt.savefig(folder + 'Loss_Quad_'+str(e_l)+'_'+str(DEG)+'.png')
-plt.show()
 
 x_t = np.linspace(lb[0], ub[0])
 y_t = np.linspace(lb[1], ub[1])
@@ -374,4 +373,3 @@ c1 = ax.plot_surface(X_m, Y_m, PRED_3[:,:,0].detach().numpy(),label='Trained Psi
                     color='orange')
 c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real,label ='Real Psi',color = 'red')
 plt.savefig(folder + 'Surface_Quad_'+str(e_l)+'_'+str(DEG)+'.png')
-plt.show()
