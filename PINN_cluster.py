@@ -333,12 +333,13 @@ model_3 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=
 
 performance_var = [initial_condition_2, [dirichlet_bc], pde_loss]
 
+
 pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
-loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3)
+loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3, pinn_path = 'best_model_pinn_Mse.pt')
 pinn_2 = pf.PINN(model_2, 3, 2, pde_loss, initial_condition_2, performance_var, [dirichlet_bc], use_gpu=False)
-loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3)
+loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3, pinn_path = 'best_model_pinn_Quad.pt')
 pinn_3 = pf.PINN(model_3, 3, 2, pde_loss, initial_condition_3, performance_var, [dirichlet_bc], use_gpu=False)
-loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3)
+loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3, pinn_path = 'best_model_pinn_Wass.pt')
 
 #Produce plots
 folder = 'Results_Simulation/'
