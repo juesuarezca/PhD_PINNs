@@ -39,7 +39,7 @@ class PDELoss(LossTerm):
             zeros = torch.zeros(pde_residual.shape, device=pde_residual.device)
             loss = torch.nn.MSELoss()(pde_residual, zeros)
         elif self.norm == 'Quad':
-            quad_loss = (np.sum([torch.sum(torch.square(pde_residual[i])) * self.quad_weights[i] for i in
+            quad_loss = (np.sum([torch.square(pde_residual[i]) * self.quad_weights[i] for i in
                                  range(len(pde_residual))]) ** (1 / 2))
             loss = quad_loss
         elif self.norm == 'Wass':
