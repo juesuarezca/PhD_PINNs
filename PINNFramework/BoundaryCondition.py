@@ -26,13 +26,13 @@ class DirichletBC(BoundaryCondition):
         self.quad_weights = quad_weights
     def __call__(self, x, model):
         prediction = model(x)  # is equal to y
-        ini_residual = (prediction - self.func(x))
+        ini_residual = (prediction - self.func(x))[:,0]
         gt_y = self.func(x)
         if self.norm == 'Mse':
             zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
             loss = torch.nn.MSELoss()(ini_residual,zeros)
         elif self.norm== 'Quad':
-            quad_loss = (np.sum([torch.sum(torch.square(ini_residual[i])) * self.quad_weights[i] for i in
+            quad_loss =(np.sum([torch.square(ini_residual[i]) * self.quad_weights[i] for i in
                                  range(len(ini_residual))]) ** (1 / 2))
             loss = quad_loss
         elif self.norm == 'Wass2':
