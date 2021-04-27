@@ -31,12 +31,12 @@ class InitialCondition(LossTerm):
         gt_y (Tensor): ground true values for the initial state
         """
         prediction = model(x)
-        ini_residual = prediction-gt_y
+        ini_residual = (prediction-gt_y)[:,0]
         if self.norm == 'Mse':
             zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
             loss = torch.nn.MSELoss()(ini_residual,zeros)
         elif self.norm== 'Quad':
-            quad_loss = (np.sum([torch.sum(torch.square(ini_residual[i])) * self.quad_weights[i] for i in
+            quad_loss = (np.sum([torch.square(ini_residual[i]) * self.quad_weights[i] for i in
                                  range(len(ini_residual))]) ** (1 / 2))
             loss = quad_loss
         elif self.norm == 'Wass2':
