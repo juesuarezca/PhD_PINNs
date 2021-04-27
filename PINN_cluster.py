@@ -317,7 +317,7 @@ if __name__ == "__main__":
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
     
 # Call the datasets functions, losses and weights for the training and for the performance measure
-folder = 'Results_Simulation'
+folder = 'Results_Simulation/27.04/'
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
                                                                                      initial_weights_2] = Dataset_loss('Quad', [lb, ub], 1, deg=DEG)
@@ -360,11 +360,11 @@ y_t = np.linspace(lb[1], ub[1])
 t = 0
 X_c = torch.tensor([[[i, j, t] for i in x_t] for j in y_t])
 #print(schroedinger1d(X_c, pinn_1(X_c)))
-pinn_1.load_model(folder+'best_model_Mse.pt')
+pinn_1.load_model('PhD_PINNs/'+folder+'best_model_Mse.pt')
 PRED_1 = pinn_1(X_c.float())
-pinn_2.load_model(folder+'best_model_Quad.pt')
+pinn_2.load_model('PhD_PINNs/'+folder+'best_model_Quad.pt')
 PRED_2 = pinn_2(X_c.float())
-pinn_3.load_model(folder+'best_model_Mse.pt')
+pinn_3.load_model('PhD_PINNs/'+folder+'best_model_Mse.pt')
 PRED_3 = pinn_3(X_c.float())
 X_m,Y_m = np.meshgrid(x_t,y_t)
 fig = plt.figure()
