@@ -12,7 +12,6 @@ import matplotlib.gridspec as gridspec
 import h5py as h5
 import os
 import torch
-sys.path.append('/Users/juanesteban')
 import PINNFramework as pf
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D 
@@ -315,6 +314,7 @@ if __name__ == "__main__":
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
     
 # Call the datasets functions, losses and weights for the training and for the performance measure
+folder = '/Users/juanesteban/PhD_PINNs/Results_Simulation/'
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
                                                                                      initial_weights_2] = Dataset_loss('Quad', [lb, ub], 1, deg=DEG)
@@ -332,20 +332,19 @@ model_3 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=
 performance_var = [initial_condition, [dirichlet_bc], pde_loss_3]
 
 pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
-loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3)
+loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_Mse.pt')
 pinn_2 = pf.PINN(model_2, 3, 2, pde_loss_2, initial_condition, performance_var, [dirichlet_bc_2], use_gpu=False)
-loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3)
+loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3, pinn_path=folder+'best_model_Quad.pt')
 pinn_3 = pf.PINN(model_3, 3, 2, pde_loss_3, initial_condition, performance_var, [dirichlet_bc_3], use_gpu=False)
-loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3)
+loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3, pinn_path = pinn_path=folder+'best_model_Wass.pt')
 
 #Produce plots
-folder = '/Users/juanesteban/PhD_PINNs/Results_Simulation/'
 
 fig = plt.figure()
 # ax2 = fig.add_subplot(2, 1, 1)
-plt.plot(loss_1.numpy(), label='MSE Loss')
-plt.plot(loss_2.numpy(), label='Quadrature Loss')
-plt.plot(loss_3.numpy(), label='Wasserstein Loss')
+plt.semilogy(loss_1.numpy(), label='MSE Loss')
+plt.semilogy(loss_2.numpy(), label='Quadrature Loss')
+plt.semilogy(loss_3.numpy(), label='Wasserstein Loss')
 plt.legend()
 plt.ylim(0,0.5)
 #plt.savefig(folder + 'Loss_Wass.png')
@@ -356,8 +355,11 @@ y_t = np.linspace(lb[1], ub[1])
 t = 0
 X_c = torch.tensor([[[i, j, t] for i in x_t] for j in y_t])
 #print(schroedinger1d(X_c, pinn_1(X_c)))
+pinn_1.load_model(folder+'best_model_Mse.pt')
 PRED_1 = pinn_1(X_c.float())
+pinn_2.load_model(folder+'best_model_Quad.pt')
 PRED_2 = pinn_2(X_c.float())
+pinn_3.load_model(folder+'best_model_Mse.pt')
 PRED_3 = pinn_3(X_c.float())
 X_m,Y_m = np.meshgrid(x_t,y_t)
 fig = plt.figure()
