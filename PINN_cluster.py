@@ -317,7 +317,7 @@ if __name__ == "__main__":
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
     
 # Call the datasets functions, losses and weights for the training and for the performance measure
-folder = 'Results_Simulation/17.04'
+folder = 'Results_Simulation/17.04/'
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
                                                                                      initial_weights_2] = Dataset_loss('Quad', [lb, ub], 1, deg=DEG)
