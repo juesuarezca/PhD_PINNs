@@ -135,7 +135,7 @@ class DirichletBC(BoundaryCondition):
             raise ValueError('Loss not defined')
 
         #loss = self.weight * self.norm(prediction, self.func(x))*0 #Just for testing the initial condition Loss
-        return self.weight*loss*0
+        return self.weight*loss
 
 class NeumannBC(BoundaryCondition):
     """
