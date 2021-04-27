@@ -317,6 +317,7 @@ if __name__ == "__main__":
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
     
 # Call the datasets functions, losses and weights for the training and for the performance measure
+folder = 'Results_Simulation/17.04'
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
                                                                                      initial_weights_2] = Dataset_loss('Quad', [lb, ub], 1, deg=DEG)
@@ -335,14 +336,13 @@ performance_var = [initial_condition_2, [dirichlet_bc], pde_loss]
 
 
 pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
-loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3, pinn_path = 'best_model_pinn_Mse.pt')
+loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Mse.pt')
 pinn_2 = pf.PINN(model_2, 3, 2, pde_loss, initial_condition_2, performance_var, [dirichlet_bc], use_gpu=False)
-loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3, pinn_path = 'best_model_pinn_Quad.pt')
+loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Quad.pt')
 pinn_3 = pf.PINN(model_3, 3, 2, pde_loss, initial_condition_3, performance_var, [dirichlet_bc], use_gpu=False)
-loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3, pinn_path = 'best_model_pinn_Wass.pt')
+loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Wass.pt')
 
 #Produce plots
-folder = 'Results_Simulation/'
 
 fig = plt.figure()
 # ax2 = fig.add_subplot(2, 1, 1)
