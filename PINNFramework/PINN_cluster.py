@@ -15,7 +15,9 @@ import torch
 import PINNFramework as pf
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D 
-e_l, DIM, DEG, LP, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])]
+e_l, DEG, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])]
+DIM = 3
+LP=2
 #Parameters
 POINTKIND = 'gauss_leg'#'leja'
 USEDATA = False
@@ -314,7 +316,7 @@ if __name__ == "__main__":
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
     
 # Call the datasets functions, losses and weights for the training and for the performance measure
-folder = '/Users/juanesteban/PhD_PINNs/Results_Simulation/'
+folder = '/Results_Simulation/28.04/'
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
                                                                                      initial_weights_2] = Dataset_loss('Quad', [lb, ub], 1, deg=DEG)
@@ -329,7 +331,7 @@ model_2 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=
 model_3 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=4, lb=lb, ub=ub)
 
 
-performance_var = [initial_condition, [dirichlet_bc_3], pde_loss_3]
+performance_var = [initial_condition, [dirichlet_bc_2], pde_loss_2]
 
 pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
 loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_Mse.pt')
