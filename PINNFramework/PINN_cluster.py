@@ -14,6 +14,7 @@ import os
 import torch
 import PINNFramework as pf
 import sympy as sp
+import horovod
 from mpl_toolkits.mplot3d import Axes3D 
 e_l, DEG, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])]
 DIM = 3
