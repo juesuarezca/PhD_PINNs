@@ -275,10 +275,10 @@ class PINN(nn.Module):
         if not self.is_hpm:
             if isinstance(self.boundary_condition_m, list):
                 for bc in self.boundary_condition_m:
-                    pinn_loss = pinn_loss + self.calculate_boundary_condition(bc, training_data[bc.name])*0
+                    pinn_loss = pinn_loss + self.calculate_boundary_condition(bc, training_data[bc.name])
             else:
                 pinn_loss = pinn_loss + self.calculate_boundary_condition(self.boundary_condition_m,
-                                                                          training_data[self.boundary_condition.name])*0
+                                                                          training_data[self.boundary_condition.name])
         return pinn_loss
 
     def fit(self, epochs, optimizer='Adam', learning_rate=1e-3, lbfgs_finetuning=True,
