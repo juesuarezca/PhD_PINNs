@@ -334,13 +334,13 @@ model_2 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=
 model_3 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=4, lb=lb, ub=ub)
 
 
-performance_var = [initial_condition, [dirichlet_bc_2], pde_loss_2]
+performance_var = [initial_condition, [dirichlet_bc_3], pde_loss_3]
 
 
-pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
-loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Mse.pt')
-pinn_2 = pf.PINN(model_2, 3, 2, pde_loss_2, initial_condition, performance_var, [dirichlet_bc_2], use_gpu=False)
-loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Quad.pt')
+#pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
+#loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Mse.pt')
+#pinn_2 = pf.PINN(model_2, 3, 2, pde_loss_2, initial_condition, performance_var, [dirichlet_bc_2], use_gpu=False)
+#loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Quad.pt')
 pinn_3 = pf.PINN(model_3, 3, 2, pde_loss_3, initial_condition, performance_var, [dirichlet_bc_3], use_gpu=False)
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Wass.pt')
 
@@ -348,8 +348,8 @@ loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_W
 
 fig = plt.figure()
 # ax2 = fig.add_subplot(2, 1, 1)
-plt.semilogy(loss_1.numpy(), label='MSE Loss')
-plt.semilogy(loss_2.numpy(), label='Quadrature Loss')
+#plt.semilogy(loss_1.numpy(), label='MSE Loss')
+#plt.semilogy(loss_2.numpy(), label='Quadrature Loss')
 plt.semilogy(loss_3.numpy(), label='Wasserstein Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Quad Performance')
@@ -362,25 +362,25 @@ y_t = np.linspace(lb[1], ub[1])
 t = 0
 X_c = torch.tensor([[[i, j, t] for i in x_t] for j in y_t])
 #print(schroedinger1d(X_c, pinn_1(X_c)))
-pinn_1.load_model(folder+'best_model_pinn_Mse.pt')
-PRED_1 = pinn_1(X_c.float())
-pinn_2.load_model(folder+'best_model_pinn_Quad.pt')
-PRED_2 = pinn_2(X_c.float())
+#pinn_1.load_model(folder+'best_model_pinn_Mse.pt')
+#PRED_1 = pinn_1(X_c.float())
+#pinn_2.load_model(folder+'best_model_pinn_Quad.pt')
+#PRED_2 = pinn_2(X_c.float())
 pinn_3.load_model(folder+'best_model_pinn_Wass.pt')
 PRED_3 = pinn_3(X_c.float())
 X_m,Y_m = np.meshgrid(x_t,y_t)
-fig = plt.figure()
-ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
-c1 = ax.plot_surface(X_m, Y_m, PRED_1[:,:,0].detach().numpy(),label='Trained Psi',
+#fig = plt.figure()
+#ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
+#c1 = ax.plot_surface(X_m, Y_m, PRED_1[:,:,0].detach().numpy(),label='Trained Psi',
                     color='blue')
-c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
-plt.savefig(folder + 'Surface_Mse_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
-fig = plt.figure()
-ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
-c1 = ax.plot_surface(X_m, Y_m, PRED_2[:,:,0].detach().numpy(),label='Trained Psi',
+#c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
+#plt.savefig(folder + 'Surface_Mse_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
+#fig = plt.figure()
+#ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
+#c1 = ax.plot_surface(X_m, Y_m, PRED_2[:,:,0].detach().numpy(),label='Trained Psi',
                     color='green')
-c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
-plt.savefig(folder + 'Surface_Quad_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
+#c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
+#plt.savefig(folder + 'Surface_Quad_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
 fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
 c1 = ax.plot_surface(X_m, Y_m, PRED_3[:,:,0].detach().numpy(),label='Trained Psi',
