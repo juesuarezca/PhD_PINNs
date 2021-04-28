@@ -339,9 +339,9 @@ performance_var = [initial_condition, [dirichlet_bc_2], pde_loss_2]
 
 pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
 loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Mse.pt')
-pinn_2 = pf.PINN(model_2, 3, 2, pde_loss, initial_condition_2, performance_var, [dirichlet_bc], use_gpu=False)
+pinn_2 = pf.PINN(model_2, 3, 2, pde_loss_2, initial_condition, performance_var, [dirichlet_bc_2], use_gpu=False)
 loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Quad.pt')
-pinn_3 = pf.PINN(model_3, 3, 2, pde_loss, initial_condition_3, performance_var, [dirichlet_bc], use_gpu=False)
+pinn_3 = pf.PINN(model_3, 3, 2, pde_loss_3, initial_condition, performance_var, [dirichlet_bc_3], use_gpu=False)
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3, pinn_path = folder+'best_model_pinn_Wass.pt')
 
 #Produce plots
