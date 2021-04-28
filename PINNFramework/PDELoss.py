@@ -129,7 +129,7 @@ class PDELoss(LossTerm):
 
                 return cost
 
-            loss = sinkhorn_loss(u_r, v_r, M, 0.05, 200)
+            loss = sinkhorn_loss(u_r, v_r, M, 0.3, 200)
         else:
             raise ValueError('Loss not defined')
         return loss
