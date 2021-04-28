@@ -8,7 +8,7 @@ import ot
 from torch.autograd import Variable
 
 class PDELoss(LossTerm):
-    def __init__(self, dataset, pde, func_left, func_right,quad_weights=[], norm='L2', weight=1.):
+    def __init__(self, dataset, pde, func, func_left, func_right,quad_weights=[], norm='L2', weight=1.):
         """
         Constructor of the PDE Loss
 
@@ -23,6 +23,7 @@ class PDELoss(LossTerm):
         self.pde = pde
         self.quad_weights = quad_weights
         self.norm = norm
+        self.func = func
         self.func_left = func_left
         self.func_right = func_right
     def __call__(self, x: Tensor, model: Module, **kwargs):
