@@ -334,7 +334,7 @@ model_2 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=
 model_3 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=4, lb=lb, ub=ub)
 
 
-performance_var = [initial_condition, [dirichlet_bc], pde_loss]
+performance_var = [initial_condition, [dirichlet_bc_2], pde_loss_2]
 
 
 pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
@@ -373,22 +373,18 @@ fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
 c1 = ax.plot_surface(X_m, Y_m, PRED_1[:,:,0].detach().numpy(),label='Trained Psi',
                     color='blue')
-#c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
+c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
 plt.savefig(folder + 'Surface_Mse_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
 fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
 c1 = ax.plot_surface(X_m, Y_m, PRED_2[:,:,0].detach().numpy(),label='Trained Psi',
                     color='green')
-#c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
+c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
 plt.savefig(folder + 'Surface_Quad_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
 fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
 c1 = ax.plot_surface(X_m, Y_m, PRED_3[:,:,0].detach().numpy(),label='Trained Psi',
                     color='orange')
-#c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
+c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
 plt.savefig(folder + 'Surface_Wass_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
-fig = plt.figure()
-ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
-c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
-plt.savefig(folder + 'Surface_Psi_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
 
