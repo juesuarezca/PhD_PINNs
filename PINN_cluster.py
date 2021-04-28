@@ -385,6 +385,7 @@ c1 = ax.plot_surface(X_m, Y_m, PRED_3[:,:,0].detach().numpy(),label='Trained Psi
                     color='orange')
 #c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
 plt.savefig(folder + 'Surface_Wass_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
+fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
 c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real.detach().numpy(),label ='Real Psi',color = 'red')
 plt.savefig(folder + 'Surface_Psi_'+str(e_l)+'_'+str(DEG)+'_n_epoch_'+str(n_epoch)+'.png')
