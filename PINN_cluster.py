@@ -334,7 +334,7 @@ model_2 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=
 model_3 = pf.models.MLP(input_size=3, output_size=2, hidden_size=50, num_hidden=4, lb=lb, ub=ub)
 
 
-performance_var = [initial_condition, [dirichlet_bc_2], pde_loss_2]
+performance_var = [initial_condition, [dirichlet_bc], pde_loss]
 
 
 pinn_1 = pf.PINN(model_1, 3, 2, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
