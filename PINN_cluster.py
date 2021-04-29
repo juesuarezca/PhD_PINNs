@@ -29,7 +29,7 @@ ub = np.array([2.0, 2.0, 0])
 #Create 2-D Dataset from the analytical solution
 def Herm_pol(n):
     p =  sp.Symbol('p')
-    d_0 = sp.diff(sp.exp(-p**2),p)
+    d_0 = sp.exp(-p**2)
     d_n =d_0
     for i in range(n):
         d_n = sp.diff(d_n,p)
@@ -45,12 +45,12 @@ def eigenvalue (ev):
     a =  sp.Symbol('a')
     b =  sp.Symbol('b')
     c =  sp.Symbol('c')
-    d_0a = sp.diff(sp.exp(-a**2),a)
+    d_0a = sp.exp(-a**2)
     d_na =d_0a
     for i in range(ev):
         d_na = sp.diff(d_na,a)
     Hna= sp.simplify((-1)**ev*d_na*sp.exp(a**2))
-    d_0b = sp.diff(sp.exp(-b**2),b)
+    d_0b = sp.exp(-b**2)
     d_nb =d_0b
     for i in range(ev):
         d_nb =sp.diff(d_nb,b)
@@ -319,7 +319,7 @@ if __name__ == "__main__":
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
     
 # Call the datasets functions, losses and weights for the training and for the performance measure
-folder = 'Results_Simulation/28.04/'
+folder = 'Results_Simulation/29.04/'+str(e_l)+'_'
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
                                                                                      initial_weights_2] = Dataset_loss('Quad', [lb, ub], 1, deg=DEG)
