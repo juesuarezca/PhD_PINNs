@@ -31,7 +31,8 @@ def Herm_pol(n):
     Hn = sp.lambdify(p,sp.hermite(n, p))
     return Hn
 def Psi (x,y,t,f):
-    print(x**2)
+    x = torch.Tensor(x)
+    y= torch.Tensor(y)
     Hn= Herm_pol(e_l)
     psi_t = torch.exp(torch.complex(torch.Tensor([0]),torch.Tensor([0])))
     return psi_t*1/((2**e_l*scipy.math.factorial(e_l))**(1/2))*(np.pi**(-1/4))*torch.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y)
