@@ -26,36 +26,21 @@ USEDATA = False
 lb = np.array([-2.0, -2.0, 0.0])
 ub = np.array([2.0, 2.0, 0])
 #Create 2-D Dataset from the analytical solution
-#Create 2-D Dataset from the analytical solution
 def Herm_pol(n):
     p =  sp.Symbol('p')
-    d_0 = sp.exp(-p**2)
-    d_n =d_0
-    for i in range(n):
-        d_n = sp.diff(d_n,p)
-    Hn = sp.lambdify(p,sp.simplify((-1)**n*d_n*sp.exp(p**2)))
+    Hn = sp.lambdify(p,sp.hermite(n, p))
     return Hn
 def Psi (x,y,t,f):
-    x = torch.Tensor(x)
-    y=torch.Tensor(y)
     Hn= Herm_pol(e_l)
     psi_t = torch.exp(torch.complex(torch.Tensor([0]),torch.Tensor([0])))
-    return psi_t*1/(2**e_l*scipy.math.factorial(e_l))*(np.pi**(-1/4))*torch.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y)
+    return psi_t*1/((2**e_l*scipy.math.factorial(e_l))**(1/2))*(np.pi**(-1/4))*torch.exp(-(x**2+y**2)/2)*Hn(x)*Hn(y)
 def eigenvalue (ev):
     a =  sp.Symbol('a')
     b =  sp.Symbol('b')
     c =  sp.Symbol('c')
-    d_0a = sp.exp(-a**2)
-    d_na =d_0a
-    for i in range(ev):
-        d_na = sp.diff(d_na,a)
-    Hna= sp.simplify((-1)**ev*d_na*sp.exp(a**2))
-    d_0b = sp.exp(-b**2)
-    d_nb =d_0b
-    for i in range(ev):
-        d_nb =sp.diff(d_nb,b)
-    Hnb = sp.simplify((-1)**ev*d_nb*sp.exp(b**2))
-    Psi = (1/(2**e_l*sp.factorial(ev))*(np.pi**(-1/4))*
+    Hna = sp.hermite(ev,a)
+    Hnb = sp.hermite(ev,b)
+    Psi = (1/((2**e_l*sp.factorial(ev))**(1/2))*(np.pi**(-1/4))*
      sp.exp(-(a**2+b**2)/2)*Hna*Hnb)
     return int(sp.simplify((-1/2*(sp.diff(Psi,a,a)+sp.diff(Psi,b,b))+
                             1/2*(a**2+b**2)*Psi)/Psi))
