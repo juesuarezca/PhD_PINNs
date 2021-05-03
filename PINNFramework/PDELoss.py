@@ -127,4 +127,4 @@ class PDELoss(LossTerm):
             loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)
         else:
             raise ValueError('Loss not defined')
-        return loss
+        return loss*0
