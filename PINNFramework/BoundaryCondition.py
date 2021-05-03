@@ -5,6 +5,7 @@ import torch
 import numpy as np
 import ot
 from torch.autograd import Variable
+import geomloss
 class BoundaryCondition(LossTerm):
     def __init__(self, name, dataset, weight=1.):
         self.name = name
@@ -19,18 +20,20 @@ class DirichletBC(BoundaryCondition):
     Dirichlet boundary conditions: y(x) = func(x).
     """
 
-    def __init__(self, func, dataset ,name, quad_weights=0,  norm = 'L2',weight=1.):
+    def __init__(self, func, dataset ,name, quad_weights=0,  norm = 'L2',weight=1., reg_param_w=0.2):
         super(DirichletBC, self).__init__(name, dataset, weight)
         self.func = func
         self.norm = norm
         self.quad_weights = quad_weights
+        self.reg_par = reg_param_w
     def __call__(self, x, model):
-        prediction = model(x)  # is equal to y
-        ini_residual = (prediction - self.func(x))[:,0]
+        prediction = model(x)[:,0]  # is equal to y
+        ini_residual = (prediction - self.func(x))
+        #print('func',[x,self.func(x)] )
         gt_y = self.func(x)
         if self.norm == 'Mse':
             zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
-            loss = torch.nn.MSELoss()(ini_residual,zeros)
+            loss = torch.mean(torch.square(ini_residual))#torch.nn.MSELoss()(ini_residual,zeros)
         elif self.norm== 'Quad':
             quad_loss =(np.sum([torch.square(ini_residual[i]) * self.quad_weights[i] for i in
                                  range(len(ini_residual))]) ** (1 / 2))
@@ -38,12 +41,12 @@ class DirichletBC(BoundaryCondition):
         elif self.norm == 'Wass2':
             gt_y= self.func(x)
             M = [[(i-j)**2 for i in range(len(prediction))] for j in range(len(prediction))]
-            min_u = abs(min((prediction.detach().numpy()[:,0])))+0.01
-            C_x = np.sum(prediction.detach().numpy()[:,0]+min_u)
-            u_r = (prediction.detach().numpy()[:,0]+ min_u)/C_x
-            min_gt = abs(min((gt_y[:,0])))+0.01
-            D_x = torch.sum(gt_y[:,0] + min_gt)
-            v_r = ((gt_y[:,0]+ min_gt)/D_x).detach().numpy()
+            min_u = abs(min((prediction.detach().numpy())))+0.01
+            C_x = np.sum(prediction.detach().numpy()+min_u)
+            u_r = (prediction.detach().numpy()+ min_u)/C_x
+            min_gt = abs(min((gt_y)))+0.01
+            D_x = torch.sum(gt_y + min_gt)
+            v_r = ((gt_y+ min_gt)/D_x).detach().numpy()
             loss = ot.sinkhorn2(np.array(u_r), np.array(v_r), np.array(M),0.8)[0]
             #ot.sinkhorn_unbalanced2(u_r, v_r, np.array(M), 0.9, 0.9)[0]
             print('loss',loss)
@@ -51,12 +54,12 @@ class DirichletBC(BoundaryCondition):
             M = torch.Tensor(
                 [[(x[i, 0] - x[j, 0]) ** 2 + (x[i, 1] - x[j, 1]) ** 2 for i in range(len(prediction))] for j in
                  range(len(prediction))])
-            min_u = torch.abs(min((prediction[:, 0]))) + 0.01
-            C_x = torch.sum(prediction[:, 0] + min_u)
-            u_r = (prediction[:, 0] + min_u) / C_x
-            min_gt = torch.abs(min((gt_y[:, 0]))) + 0.01
-            D_x = torch.sum(gt_y[:, 0] + min_gt)
-            v_r = (gt_y[:, 0] + min_gt) / D_x
+            min_u = torch.abs(min((prediction))) + 0.01
+            C_x = torch.sum(prediction + min_u)
+            u_r = (prediction + min_u) / C_x
+            min_gt = torch.abs(min((gt_y))) + 0.01
+            D_x = torch.sum(gt_y + min_gt)
+            v_r = (gt_y + min_gt) / D_x
 
             def sinkhorn_normalized(x, y, epsilon, n, niter):
 
@@ -80,14 +83,6 @@ class DirichletBC(BoundaryCondition):
                 """
                 # The Sinkhorn algorithm takes as input three variables :
                 C = Variable(M)  # Wasserstein cost function
-                # both marginals are fixed with equal weights
-                # mu = Variable(1. / n * torch.cuda.FloatTensor(n).fill_(1), requires_grad=False)
-                # nu = Variable(1. / n * torch.cuda.FloatTensor(n).fill_(1), requires_grad=False)
-                # mu = Variable(output, requires_grad = False)
-                # nu = Variable(target, requires_grad=False)
-                # mu = Variable(1. / n * torch.FloatTensor(n).fill_(1), requires_grad=False)
-                # nu = Variable(1. / n * torch.FloatTensor(n).fill_(1), requires_grad=False)
-
                 # Parameters of the Sinkhorn algorithm.
                 rho = 1  # (.5) **2          # unbalanced transport
                 tau = -.8  # nesterov-like acceleration
@@ -130,8 +125,10 @@ class DirichletBC(BoundaryCondition):
 
                 return cost
 
-            loss = sinkhorn_loss(u_r, v_r, M, 0.3, 200)
-            print(loss)
+            loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)
+            #u_rr = prediction
+            #v_rr = gt_y
+            #loss = geomloss.SamplesLoss().forward(torch.reshape(u_rr,(len(u_rr),1)),torch.reshape(v_rr,(len(v_rr),1)))
         else:
             raise ValueError('Loss not defined')
 
@@ -207,3 +204,4 @@ class PeriodicBC(BoundaryCondition):
 
         else:
             raise NotImplementedError("Periodic Boundary Condition for a higher degree than one is not supported")
+
