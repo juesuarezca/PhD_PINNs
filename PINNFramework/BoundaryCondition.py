@@ -125,7 +125,7 @@ class DirichletBC(BoundaryCondition):
 
                 return cost
 
-            loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)*0
+            loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)
             #u_rr = prediction
             #v_rr = gt_y
             #loss = geomloss.SamplesLoss().forward(torch.reshape(u_rr,(len(u_rr),1)),torch.reshape(v_rr,(len(v_rr),1)))
@@ -133,7 +133,7 @@ class DirichletBC(BoundaryCondition):
             raise ValueError('Loss not defined')
 
         #loss = self.weight * self.norm(prediction, self.func(x))*0 #Just for testing the initial condition Loss
-        return self.weight*loss
+        return self.weight*loss*0
 
 class NeumannBC(BoundaryCondition):
     """
