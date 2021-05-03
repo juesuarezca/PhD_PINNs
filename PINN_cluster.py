@@ -6,7 +6,7 @@ from pyDOE import lhs
 from torch import Tensor, ones, stack, load
 from torch.autograd import grad
 from torch.utils.data import Dataset
-import mintegpy as mp
+#import mintegpy as mp
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import h5py as h5
