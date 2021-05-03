@@ -125,7 +125,7 @@ class DirichletBC(BoundaryCondition):
 
                 return cost
 
-            loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)
+            loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)*0
             #u_rr = prediction
             #v_rr = gt_y
             #loss = geomloss.SamplesLoss().forward(torch.reshape(u_rr,(len(u_rr),1)),torch.reshape(v_rr,(len(v_rr),1)))
