@@ -6,7 +6,7 @@ from .LossTerm import LossTerm
 import numpy as np
 import ot
 from torch.autograd import Variable
-import geomloss
+#import geomloss
 class PDELoss(LossTerm):
     def __init__(self, dataset, pde, func_left, func_right,quad_weights=[], norm='L2', weight=1.,
                 reg_param_w=0.2):
