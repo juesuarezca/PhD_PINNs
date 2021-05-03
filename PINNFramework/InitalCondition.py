@@ -6,7 +6,7 @@ import numpy as np
 import ot
 import matplotlib.pyplot as plt
 from torch.autograd import Variable
-print('modified')
+#import geomloss
 class InitialCondition(LossTerm):
     def __init__(self, dataset,quad_weights=[] ,norm='Mse', weight=1.):
         """
@@ -31,7 +31,7 @@ class InitialCondition(LossTerm):
         gt_y (Tensor): ground true values for the initial state
         """
         prediction = model(x)
-        ini_residual = (prediction-gt_y)[:,0]
+        ini_residual = (prediction-gt_y)
         if self.norm == 'Mse':
             zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
             loss = torch.nn.MSELoss()(ini_residual,zeros)
@@ -58,8 +58,8 @@ class InitialCondition(LossTerm):
             u_r = (prediction[:, 0] + min_u) / C_x
             min_gt = torch.abs(min((gt_y[:, 0]))) + 0.01
             D_x = torch.sum(gt_y[:, 0] + min_gt)
-            v_r = (gt_y[:, 0] + min_gt) / D_x
-
+            v_r = (gt_y[:, 0] + min_gt) / D_x            
+            #print(geomloss.SamplesLoss().forward(torch.reshape(u_r,(len(u_r),1),torch.reshape(v_r,(len(v_r),1)))
             def sinkhorn_normalized(x, y, epsilon, n, niter):
 
                 Wxy = sinkhorn_loss(x, y, epsilon, n, niter)
@@ -132,9 +132,8 @@ class InitialCondition(LossTerm):
                 cost = torch.sum(pi * C)  # Sinkhorn cost
 
                 return cost
-
-            loss = sinkhorn_loss(u_r, v_r, M, 0.3, 200)
+            loss = sinkhorn_loss(u_r, v_r, M, 0.2, 200)
         else:
             raise ValueError('Loss not defined')
-
+            
         return loss*self.weight*0
