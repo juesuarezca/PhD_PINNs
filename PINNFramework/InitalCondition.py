@@ -136,4 +136,4 @@ class InitialCondition(LossTerm):
         else:
             raise ValueError('Loss not defined')
             
-        return loss*self.weight*0
+        return loss*self.weight
