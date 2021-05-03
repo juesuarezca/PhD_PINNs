@@ -301,9 +301,7 @@ loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+'best_model_Quad.pt')
 pinn_3 = pf.PINN(model_3, 3, 1, pde_loss_3, initial_condition_3, performance_var, [dirichlet_bc_2] ,use_gpu=False)
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3,pinn_path = folder+'best_model_Wass.pt')
 
-#Produce plots
 
-%matplotlib notebook
 #Produce plots
 #!mkdir /Users/juanesteban/PhD_PINNs/Results_Simulation/27.04/
 fig = plt.figure()
