@@ -1,3 +1,31 @@
+import sys
+import numpy as np
+import scipy
+import scipy.io
+from pyDOE import lhs
+from torch import Tensor, ones, stack, load
+from torch.autograd import grad
+from torch.utils.data import Dataset
+import mintegpy as mp
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import h5py as h5
+import os
+import torch
+import PINNFramework as pf
+import sympy as sp
+from mpl_toolkits.mplot3d import Axes3D 
+import sys
+#Read the input variables
+e_l, DEG, n_epoch = [sys.eva[1], sys.eva[2],  sys.eva[3]]
+#Fixed Data
+DIM = 2
+LP=2
+POINTKIND = 'gauss_leg'#'leja'
+USEDATA = False
+#Doamin Bounds
+lb = np.array([-1.0, -1.0, 0.0])
+ub = np.array([1.0, 1.0, 0])
 #Create 2-D Dataset from the analytical solution
 def Herm_pol(n):
     p =  sp.Symbol('p')
