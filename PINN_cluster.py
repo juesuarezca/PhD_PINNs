@@ -17,7 +17,7 @@ import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D 
 import sys
 #Read the input variables
-e_l, DEG, n_epoch = [sys.argv[1], sys.argv[2],  sys.argv[3]]
+e_l, DEG, n_epoch = [int(sys.argv[1]), int(sys.argv[2]),  int(sys.argv[3])]
 print(e_l)
 #Fixed Data
 DIM = 2
