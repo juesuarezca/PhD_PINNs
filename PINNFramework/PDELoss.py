@@ -6,9 +6,10 @@ from .LossTerm import LossTerm
 import numpy as np
 import ot
 from torch.autograd import Variable
-
+import geomloss
 class PDELoss(LossTerm):
-    def __init__(self, dataset, pde, func_left, func_right,quad_weights=[], norm='L2', weight=1.):
+    def __init__(self, dataset, pde, func_left, func_right,quad_weights=[], norm='L2', weight=1.,
+                reg_param_w=0.2):
         """
         Constructor of the PDE Loss
 
@@ -25,6 +26,7 @@ class PDELoss(LossTerm):
         self.norm = norm
         self.func_left = func_left
         self.func_right = func_right
+        self.reg_par = reg_param_w
     def __call__(self, x: Tensor, model: Module, **kwargs):
         """
         Call function of the PDE loss. Calculates the norm of the PDE residual
@@ -43,7 +45,7 @@ class PDELoss(LossTerm):
                                  range(len(pde_residual))]) ** (1 / 2))
             loss = quad_loss
         elif self.norm == 'Wass':
-            mu = self.func_left(x,u,**kwargs)
+            mu = self.func_left(x,u,**kwargs)[:,0]
             nu = self.func_right(x,u,**kwargs)
             prediction = mu
             gt_y = nu
@@ -79,15 +81,6 @@ class PDELoss(LossTerm):
                 """
                 # The Sinkhorn algorithm takes as input three variables :
                 C = Variable(M)  # Wasserstein cost function
-                # both marginals are fixed with equal weights
-                # mu = Variable(1. / n * torch.cuda.FloatTensor(n).fill_(1), requires_grad=False)
-                # nu = Variable(1. / n * torch.cuda.FloatTensor(n).fill_(1), requires_grad=False)
-                #mu = Variable(output, requires_grad = False)
-                #nu = Variable(target, requires_grad=False)
-                #mu = Variable(1. / n * torch.FloatTensor(n).fill_(1), requires_grad=False)
-                #nu = Variable(1. / n * torch.FloatTensor(n).fill_(1), requires_grad=False)
-
-                # Parameters of the Sinkhorn algorithm.
                 rho = 1  # (.5) **2          # unbalanced transport
                 tau = -.8  # nesterov-like acceleration
                 lam = rho / (rho + epsilon)  # Update exponent
@@ -128,9 +121,10 @@ class PDELoss(LossTerm):
                 cost = torch.sum(pi * C)  # Sinkhorn cost
 
                 return cost
-
-            loss = sinkhorn_loss(u_r, v_r, M, 0.3, 200)
-            print(loss)
+            #u_rr = prediction
+            #v_rr = gt_y
+            #loss = geomloss.SamplesLoss().forward(torch.reshape(u_rr,(len(u_rr),1)),torch.reshape(v_rr,(len(v_rr),1)))
+            loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)
         else:
             raise ValueError('Loss not defined')
         return loss
