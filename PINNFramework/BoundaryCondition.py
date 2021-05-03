@@ -5,7 +5,7 @@ import torch
 import numpy as np
 import ot
 from torch.autograd import Variable
-import geomloss
+#import geomloss
 class BoundaryCondition(LossTerm):
     def __init__(self, name, dataset, weight=1.):
         self.name = name
