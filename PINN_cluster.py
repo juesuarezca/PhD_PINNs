@@ -293,12 +293,12 @@ model_2 = pf.models.MLP(input_size=3, output_size=1, hidden_size=50, num_hidden=
 model_3 = pf.models.MLP(input_size=3, output_size=1, hidden_size=50, num_hidden=4, lb=lb, ub=ub)
 
 
-performance_var = [initial_condition, [dirichlet_bc], pde_loss]
+performance_var = [initial_condition_2, [dirichlet_bc], pde_loss]
 pinn_1 = pf.PINN(model_1, 3, 1, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
 loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+'best_model_Mse.pt')
-pinn_2 = pf.PINN(model_2, 3, 1, pde_loss_2, initial_condition, performance_var, [dirichlet_bc_2] ,use_gpu=False)
+pinn_2 = pf.PINN(model_2, 3, 1, pde_loss, initial_condition_2, performance_var, [dirichlet_bc] ,use_gpu=False)
 loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+'best_model_Quad.pt')
-pinn_3 = pf.PINN(model_3, 3, 1, pde_loss_3, initial_condition_3, performance_var, [dirichlet_bc_2] ,use_gpu=False)
+pinn_3 = pf.PINN(model_3, 3, 1, pde_loss, initial_condition_3, performance_var, [dirichlet_bc] ,use_gpu=False)
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3,pinn_path = folder+'best_model_Wass.pt')
 
 
