@@ -14,7 +14,7 @@ import torch
 import PINNFramework as pf
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D
-sys.path.append('/home/suarez08/')
+sys.path.append('/home/suarez08/minterpy/src/')
 import minterpy as mp
 e_l, DEG, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])]
 LP=2
