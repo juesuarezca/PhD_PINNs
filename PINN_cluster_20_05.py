@@ -230,6 +230,7 @@ def H1_coeff(deg, residual_bdy):
     un_weights = set_gen_sob(deg+1, can_bdy, 
                          np.polynomial.legendre.leggauss(deg+1)[0],
                          np.polynomial.legendre.leggauss(deg+1)[1])[1]#np.polynomial.legendre.leggauss(n+1)[1]
+    print(un_grid.shape)
     ord_index = [[ i for i,j in enumerate(un_grid) if j[0] == ord_grid[k][0] and 
                  j[1] == ord_grid[k][1]][0] for k in range(len(ord_grid))]
     ord_sc_weights = un_weights[ord_index]
