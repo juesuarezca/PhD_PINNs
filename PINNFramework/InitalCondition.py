@@ -1,14 +1,12 @@
-from .LossTerm import LossTerm
-from torch import Tensor
 from torch.nn import Module
 import torch
 import numpy as np
 import ot
 import matplotlib.pyplot as plt
 from torch.autograd import Variable
-#import geomloss
+import geomloss
 class InitialCondition(LossTerm):
-    def __init__(self, dataset,quad_weights=[] ,norm='Mse', weight=1.):
+    def __init__(self, dataset,quad_weights=[], sob_weights=[] ,norm='Mse', weight=1.):
         """
         Constructor for the Intial condition
 
@@ -20,6 +18,7 @@ class InitialCondition(LossTerm):
         super(InitialCondition, self).__init__(dataset, norm, weight)
         self.quad_weights = quad_weights
         self.norm = norm
+        self.sob_weights = sob_weights
     def __call__(self, x: Tensor, model: Module, gt_y: Tensor):
         """
         This function returns the loss for the initial condition
@@ -36,9 +35,23 @@ class InitialCondition(LossTerm):
             zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
             loss = torch.nn.MSELoss()(ini_residual,zeros)
         elif self.norm== 'Quad':
-            quad_loss = (np.sum([torch.square(ini_residual[i]) * self.quad_weights[i] for i in
-                                 range(len(ini_residual))]) ** (1 / 2))
-            loss = quad_loss
+            quad_loss = (ini_residual[:,0]**2).dot(torch.Tensor(self.quad_weights))**(1/2)
+            loss = (quad_loss)*0
+        elif self.norm == 'Sobolev_1':
+            ini_weights ,Hi_x, Hi_y, Hi_xx, Hi_xy, Hi_yy = self.sob_weights
+            #L2_ip =(np.sum([torch.square(pde_residual[i]) * ord_sc_weights[i] for i in
+            #                     range(len(pde_residual))]) ** (1 / 2))
+            L2_ip = (ini_residual[:,0]**2).dot(torch.Tensor(ini_weights))**(1/2)
+            cxc = torch.outer(ini_residual[:,0], ini_residual[:,0])
+            dx = torch.sum(cxc*Hi_x)
+            dy = torch.sum(cxc*Hi_y)
+            H1_ip = dx + dy
+            dxx = torch.sum(cxc*Hi_xx)
+            dyy = torch.sum(cxc*Hi_yy)
+            dxy = torch.sum(cxc*Hi_xy)
+            H2_ip = dxx + dxx + dxy
+            loss = (L2_ip**(1/2)+H1_ip**(1/2)+ H2_ip**(1/2))*0
+            print('PDE Loss', loss)
         elif self.norm == 'Wass2':
             M = [[(i-j)**2 for i in range(len(prediction))] for j in range(len(prediction))]
             min_u = abs(min((prediction.detach().numpy()[:,0])))+0.01
