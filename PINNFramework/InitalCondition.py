@@ -1,6 +1,7 @@
 
 from .LossTerm import LossTerm
 from torch.nn import Module
+from torch import Tensor
 import torch
 import numpy as np
 import ot
