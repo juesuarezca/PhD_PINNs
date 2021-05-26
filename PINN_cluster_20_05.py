@@ -11,12 +11,10 @@ import matplotlib.gridspec as gridspec
 import h5py as h5
 import os#
 import torch
-sys.path.append('/Users/juanesteban')
 import PINNFramework as pf
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D 
-sys.path.insert(1, '/Users/juanesteban/minterpy/src')
-import minterpy as mp
+from . import minterpy as mp
 e_l, DEG, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])]
 LP=2
 POINTKIND = 'gauss_leg'#'leja'
