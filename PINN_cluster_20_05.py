@@ -218,7 +218,7 @@ class PDEDataset(Dataset):
         """
         return 1
 def H1_coeff(deg, residual_bdy):
-    mi = mp.multi_index.MultiIndex.from_degree(spatial_dimension=2, poly_degree=deg, lp_degree=np.inf)
+    mi = mp.MultiIndex.from_degree(spatial_dimension=2, poly_degree=deg, lp_degree=np.inf)
     ord_grid =mp.grid.Grid(mi).unisolvent_nodes
     can_bdy = np.array([[-1, -1, 0], [1, 1, 0]])
     un_grid = set_gen_sob(deg+1, can_bdy, 
