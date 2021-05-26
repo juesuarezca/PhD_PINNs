@@ -6,10 +6,9 @@ from .LossTerm import LossTerm
 import numpy as np
 import ot
 from torch.autograd import Variable
-#import geomloss
+import geomloss
 class PDELoss(LossTerm):
-    def __init__(self, dataset, pde, func_left, func_right,quad_weights=[], norm='L2', weight=1.,
-                reg_param_w=0.2):
+    def __init__(self, dataset, pde, func_left, func_right,quad_weights=[], sob_weights =[], norm='L2', weight=1., reg_param_w=0.2):
         """
         Constructor of the PDE Loss
 
@@ -27,6 +26,7 @@ class PDELoss(LossTerm):
         self.func_left = func_left
         self.func_right = func_right
         self.reg_par = reg_param_w
+        self.sob_weights = sob_weights
     def __call__(self, x: Tensor, model: Module, **kwargs):
         """
         Call function of the PDE loss. Calculates the norm of the PDE residual
@@ -39,22 +39,34 @@ class PDELoss(LossTerm):
         pde_residual = self.pde(x, u, **kwargs)
         if self.norm == 'Mse':
             zeros = torch.zeros(pde_residual.shape, device=pde_residual.device)
-            loss = torch.nn.MSELoss()(pde_residual, zeros)
+            loss = torch.nn.MSELoss()(pde_residual, zeros)*0
         elif self.norm == 'Quad':
-            quad_loss = (np.sum([torch.square(pde_residual[i]) * self.quad_weights[i] for i in
-                                 range(len(pde_residual))]) ** (1 / 2))
-            loss = quad_loss
+            L2_ip = (pde_residual**2).dot(torch.Tensor(self.quad_weights))**(1/2)
+            loss = L2_ip
+        elif self.norm == 'Sobolev_1':
+            res_weights ,Hr_x, Hr_y, Hr_xx, Hr_xy, Hr_yy = self.sob_weights
+            L2_ip = (pde_residual**2).dot(torch.Tensor(res_weights))**(1/2)
+            cxc = torch.outer(pde_residual,pde_residual)
+            dx = torch.sum(cxc*Hr_x)
+            dy = torch.sum(cxc*Hr_y)
+            H1_ip = dx + dy
+            dxx = torch.sum(cxc*Hr_xx)
+            dyy = torch.sum(cxc*Hr_yy)
+            dxy = torch.sum(cxc*Hr_xy)
+            H2_ip = dxx + dxx + dxy
+            loss = L2_ip**(1/2)+H1_ip**(1/2)+ H2_ip**(1/2)
         elif self.norm == 'Wass':
             mu = self.func_left(x,u,**kwargs)[:,0]
             nu = self.func_right(x,u,**kwargs)
             prediction = mu
             gt_y = nu
-            min_u = torch.abs(min((prediction))) + 0.01
-            C_x = torch.sum(prediction + min_u)
-            u_r = (prediction + min_u) / C_x
-            min_gt = torch.abs(min((gt_y))) + 0.01
-            D_x = torch.sum(gt_y + min_gt)
-            v_r = (gt_y + min_gt) / D_x
+            min_u = min(prediction)
+            min_gt = min(gt_y)
+            min_mu = abs(min(min_u,min_gt))+0.01
+            C_x = torch.sum(prediction + min_mu)
+            u_r = (prediction + min_mu) / C_x
+            D_x = torch.sum(gt_y + min_mu)
+            v_r = (gt_y + min_mu) / D_x
             M = torch.Tensor(
                 [[(x[i, 0] - x[j, 0]) ** 2 + (x[i, 1] - x[j, 1]) ** 2 for i in         range(len(prediction))] for j in
                  range(len(prediction))])
@@ -127,4 +139,4 @@ class PDELoss(LossTerm):
             loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)
         else:
             raise ValueError('Loss not defined')
-        return loss*0
+        return loss
