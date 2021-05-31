@@ -41,19 +41,13 @@ class InitialCondition(LossTerm):
             quad_loss = (ini_residual[:,0]**2).dot(torch.Tensor(self.quad_weights))**(1/2)
             loss = (quad_loss)*0
         elif self.norm == 'Sobolev_1':
-            ini_weights ,Hi_x, Hi_y, Hi_xx, Hi_xy, Hi_yy = self.sob_weights
+            ini_weights , Hkw_ini = self.sob_weights
             #L2_ip =(np.sum([torch.square(pde_residual[i]) * ord_sc_weights[i] for i in
             #                     range(len(pde_residual))]) ** (1 / 2))
             L2_ip = (ini_residual[:,0]**2).dot(torch.Tensor(ini_weights))**(1/2)
             cxc = torch.outer(ini_residual[:,0], ini_residual[:,0])
-            dx = torch.sum(cxc*Hi_x)
-            dy = torch.sum(cxc*Hi_y)
-            H1_ip = dx + dy
-            dxx = torch.sum(cxc*Hi_xx)
-            dyy = torch.sum(cxc*Hi_yy)
-            dxy = torch.sum(cxc*Hi_xy)
-            H2_ip = dxx + dxx + dxy
-            loss = (L2_ip**(1/2)+H1_ip**(1/2)+ H2_ip**(1/2))*0
+            H_k = np.sum([np.sum([torch.sum(cxc*Hkw_ini[i][k]) for k in range(len(Hkw_ini[i]))])**(1/2) for i in range(len(Hkw_ini))])
+            loss = (L2_ip**(1/2)+H_k)
             print('PDE Loss', loss)
         elif self.norm == 'Wass2':
             M = [[(i-j)**2 for i in range(len(prediction))] for j in range(len(prediction))]
