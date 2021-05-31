@@ -43,18 +43,12 @@ class PDELoss(LossTerm):
         elif self.norm == 'Quad':
             L2_ip = (pde_residual**2).dot(torch.Tensor(self.quad_weights))**(1/2)
             loss = L2_ip
-        elif self.norm == 'Sobolev_1':
-            res_weights ,Hr_x, Hr_y, Hr_xx, Hr_xy, Hr_yy = self.sob_weights
+         elif self.norm == 'Sobolev_1':
+            res_weights ,Hkw_res= self.sob_weights
             L2_ip = (pde_residual**2).dot(torch.Tensor(res_weights))**(1/2)
             cxc = torch.outer(pde_residual,pde_residual)
-            dx = torch.sum(cxc*Hr_x)
-            dy = torch.sum(cxc*Hr_y)
-            H1_ip = dx + dy
-            dxx = torch.sum(cxc*Hr_xx)
-            dyy = torch.sum(cxc*Hr_yy)
-            dxy = torch.sum(cxc*Hr_xy)
-            H2_ip = dxx + dxx + dxy
-            loss = L2_ip**(1/2)+H1_ip**(1/2)+ H2_ip**(1/2)
+            H_k = np.sum([np.sum([torch.sum(cxc*Hkw_res[i][k]) for k in range(len(Hkw_res[i]))])**(1/2) for i in range(len(Hkw_res))])
+            loss = L2_ip**(1/2)+H_k
         elif self.norm == 'Wass':
             mu = self.func_left(x,u,**kwargs)[:,0]
             nu = self.func_right(x,u,**kwargs)
