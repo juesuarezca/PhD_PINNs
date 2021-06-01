@@ -16,7 +16,7 @@ import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D
 sys.path.append('/home/suarez08/minterpy/src/')
 import minterpy as mp
-e_l, DEG, n_epoch, d_Lr, d_Lb, d_Li = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])]
+e_l, DEG, n_epoch, d_Lr, d_Lb, d_Li = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])]
 LP=2
 POINTKIND = 'gauss_leg'#'leja'
 USEDATA = False
