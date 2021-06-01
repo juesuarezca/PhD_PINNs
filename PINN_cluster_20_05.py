@@ -16,7 +16,7 @@ import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D
 sys.path.append('/home/suarez08/minterpy/src/')
 import minterpy as mp
-e_l, DEG, n_epoch = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])]
+e_l, DEG, n_epoch, d_Lr, d_Lb, d_Li = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])]
 LP=2
 POINTKIND = 'gauss_leg'#'leja'
 USEDATA = False
@@ -409,10 +409,10 @@ if __name__ == "__main__":
             #Hb_x, Hb_y,Hb_xx, Hb_xy, Hb_yy = [[],[],[],[],[]]
             Datasets = [[boundary_set, residual_set, initial_set],[boundary_weights, residual_weights, initial_weights]]
         elif Norm == 'Sobolev_1':
-            initial_set, initial_weights, Hkw_ini = Hk_coeff(deg,1)
-            residual_set, res_weights , Hkw_res = Hk_coeff(deg,2)
+            initial_set, initial_weights, Hkw_ini = Hk_coeff(deg,d_Li)
+            residual_set, res_weights , Hkw_res = Hk_coeff(deg,d_Lr)
             #Create Boundary Set
-            boundary_set, boundary_weights, Hkw_bdy = Hk_coeff_bdy(int(deg*deg/4), 3)
+            boundary_set, boundary_weights, Hkw_bdy = Hk_coeff_bdy(int(deg*deg/4), d_Li)
             #boundary_set = np.concatenate([set_gen_1d(deg, boundary_bdy[i])[0] for i in range(4)], axis=0)
             #boundary_weights = np.concatenate([set_gen_1d(deg, boundary_bdy[i])[1] for i in range(4)], axis=0)
             Datasets = [[boundary_set, residual_set, initial_set],
