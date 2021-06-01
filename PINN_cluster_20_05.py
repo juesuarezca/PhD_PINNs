@@ -444,7 +444,7 @@ if __name__ == "__main__":
                                                 norm=Norm, sob_weights=Datasets[1][2])
         #test_loss = tl.My_Loss(ic_dataset,  quad_weights=Datasets[1][2], norm=Norm)
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
-folder = '/Results_Simulation/01.06/'+str(e_l)+'_'+str(n_epoch)
+folder = '/Results_Simulation/01.06/'
 # Call the datasets functions, losses and weights for the training and for the performance measure
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
@@ -463,12 +463,12 @@ model_3 = pf.models.MLP(input_size=3, output_size=1, hidden_size=50, num_hidden=
 performance_var = [initial_condition, [dirichlet_bc], pde_loss]
 pinn_1 = pf.PINN(model_1, 3, 1, pde_loss,initial_condition_2, performance_var, [dirichlet_bc], use_gpu=False)
 loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3,
-                   pinn_path=folder+'_best_model_Mse.pt')
+                   pinn_path=folder+str(e_l)+'_'+str(n_epoch)+'_best_model_Mse.pt')
 pinn_2 = pf.PINN(model_2, 3, 1, pde_loss_2, initial_condition_2, performance_var, [dirichlet_bc_2] ,use_gpu=False)
-loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+'_best_model_Quad.pt')
+loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+str(e_l)+'_'+str(n_epoch)+'_best_model_Quad.pt')
 pinn_3 = pf.PINN(model_3, 3, 1, pde_loss_3, initial_condition_3, performance_var, [dirichlet_bc_3] ,use_gpu=False)
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3,
-                    pinn_path = folder+'_best_model_Hk.pt')
+                    pinn_path = folder+str(e_l)+'_'+str(n_epoch)+'_best_model_Hk.pt')
 fig = plt.figure()
 # ax2 = fig.add_subplot(2, 1, 1)
 plt.semilogy(loss_1.numpy(), label='MSE Loss')
