@@ -444,7 +444,7 @@ if __name__ == "__main__":
                                                 norm=Norm, sob_weights=Datasets[1][2])
         #test_loss = tl.My_Loss(ic_dataset,  quad_weights=Datasets[1][2], norm=Norm)
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
-folder = '/Results_Simulation/01.06/'
+folder = '/Results_Simulation/03.05/'
 # Call the datasets functions, losses and weights for the training and for the performance measure
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
