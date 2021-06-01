@@ -47,7 +47,7 @@ class InitialCondition(LossTerm):
             L2_ip = (ini_residual[:,0]**2).dot(torch.Tensor(ini_weights))**(1/2)
             cxc = torch.outer(ini_residual[:,0], ini_residual[:,0])
             H_k = np.sum([np.sum([torch.sum(cxc*Hkw_ini[i][k]) for k in range(len(Hkw_ini[i]))])**(1/2) for i in range(len(Hkw_ini))])
-            loss = (L2_ip**(1/2)+H_k)
+            loss = (L2_ip**(1/2)+H_k)*0
             print('PDE Loss', loss)
         elif self.norm == 'Wass2':
             M = [[(i-j)**2 for i in range(len(prediction))] for j in range(len(prediction))]
@@ -146,4 +146,4 @@ class InitialCondition(LossTerm):
         else:
             raise ValueError('Loss not defined')
             
-        return loss*self.weight*0
+        return loss*self.weight
