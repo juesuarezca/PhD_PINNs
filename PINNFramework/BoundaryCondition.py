@@ -168,7 +168,7 @@ class DirichletBC(BoundaryCondition):
                 #loss = geomloss.SamplesLoss().forward(torch.reshape(u_rr,(len(u_rr),1)),torch.reshape(v_rr,(len(v_rr),1)))
             else:
                 raise ValueError('Loss not defined')
-        return self.weight*loss
+        return loss
 
 class NeumannBC(BoundaryCondition):
     """
