@@ -483,8 +483,8 @@ y_t = np.linspace(lb[1], ub[1])
 t = 0
 X_c = torch.tensor([[[i, j, t] for i in x_t] for j in y_t])
 #print(schroedinger1d(X_c, pinn_1(X_c)))
-pinn_1.load_model(folder+'best_model_Mse.pt')
-PRED_1 = pinn_1(X_c.float())
+#pinn_1.load_model(folder+'best_model_Mse.pt')
+#PRED_1 = pinn_1(X_c.float())
 pinn_2.load_model(folder+
                 'best_model_Quad.pt')
 PRED_2 = pinn_2(X_c.float())
@@ -497,7 +497,7 @@ def pred_lam(deg, pinn):
     Xs.requires_grad = True
     lam = res_right(Xs,pinn(Xs)).dot(torch.Tensor(res_weights))/pinn(Xs).T[0].dot(torch.Tensor(res_weights))
     return lam
-lam_1 = pred_lam(30,pinn_1)
+#lam_1 = pred_lam(30,pinn_1)
 lam_2 = pred_lam(30,pinn_2)
 lam_3 = pred_lam(30,pinn_3)
 X_m,Y_m = np.meshgrid(x_t,y_t)
@@ -511,12 +511,6 @@ X_m,Y_m = np.meshgrid(x_t,y_t)
 lam_pred = lam_pred = pred_lam(30,pinn_3)#torch.median(torch.div(res_right(X_c1,pinn_3(X_c1.float())),
 #                                pinn_3(X_c1.float())[:,0])).detach().numpy()
 lam_pred = "{:.2f}".format(lam_pred)
-fig = plt.figure()
-ax = fig.gca(projection='3d')#
-c2 = ax.plot_surface(X_m, Y_m, PRED_3[:, :, 0].detach().numpy(), label='Trained Psi_wass',
-                    color='orange')
-c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,1,e_l),label ='Real Psi',color = 'red')
-plt.title('$\lambda$: '+str(lam)+', Deg: '+str(DEG)+', $\lambda$_p: '+str(lam_pred))
 fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
 c2 = ax.plot_surface(X_m, Y_m, PRED_2[:, :, 0].detach().numpy(), label='Trained Psi_wass',
