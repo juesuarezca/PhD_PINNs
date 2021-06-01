@@ -39,7 +39,7 @@ class PDELoss(LossTerm):
         pde_residual = self.pde(x, u, **kwargs)
         if self.norm == 'Mse':
             zeros = torch.zeros(pde_residual.shape, device=pde_residual.device)
-            loss = torch.nn.MSELoss()(pde_residual, zeros)*0
+            loss = torch.nn.MSELoss()(pde_residual, zeros)
         elif self.norm == 'Quad':
             L2_ip = (pde_residual**2).dot(torch.Tensor(self.quad_weights))**(1/2)
             loss = L2_ip
