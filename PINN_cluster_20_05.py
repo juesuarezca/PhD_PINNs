@@ -412,7 +412,7 @@ if __name__ == "__main__":
             initial_set, initial_weights, Hkw_ini = Hk_coeff(deg,d_Li)
             residual_set, res_weights , Hkw_res = Hk_coeff(deg,d_Lr)
             #Create Boundary Set
-            boundary_set, boundary_weights, Hkw_bdy = Hk_coeff_bdy(int(deg*deg/4), d_Li)
+            boundary_set, boundary_weights, Hkw_bdy = Hk_coeff_bdy(int(deg*deg/4), d_Lb)
             #boundary_set = np.concatenate([set_gen_1d(deg, boundary_bdy[i])[0] for i in range(4)], axis=0)
             #boundary_weights = np.concatenate([set_gen_1d(deg, boundary_bdy[i])[1] for i in range(4)], axis=0)
             Datasets = [[boundary_set, residual_set, initial_set],
@@ -469,20 +469,17 @@ pinn_3 = pf.PINN(model_3, 3, 1, pde_loss_3, initial_condition, performance_var, 
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3,
                     pinn_path = folder+'best_model_Hk.pt')
 fig = plt.figure()
-# ax2 = fig.add_subplot(2, 1, 1)
-#plt.semilogy(loss_1.numpy(), label='MSE Loss')
+plt.semilogy(loss_1.numpy(), label='MSE Loss')
 plt.semilogy(loss_2.numpy(), label='Quadrature Loss')
 plt.semilogy(loss_3.numpy(), label='Wasserstein Loss')
 plt.legend()
-plt.ylim(0,0.5)
+#plt.ylim(0,0.5)
 plt.savefig(folder + 'Loss_Wass.png')
 plt.show()
-
 x_t = np.linspace(lb[0], ub[0])
 y_t = np.linspace(lb[1], ub[1])
 t = 0
 X_c = torch.tensor([[[i, j, t] for i in x_t] for j in y_t])
-#print(schroedinger1d(X_c, pinn_1(X_c)))
 pinn_1.load_model(folder+'best_model_Mse.pt')
 PRED_1 = pinn_1(X_c.float())
 pinn_2.load_model(folder+
@@ -497,7 +494,7 @@ def pred_lam(deg, pinn):
     Xs.requires_grad = True
     lam = res_right(Xs,pinn(Xs)).dot(torch.Tensor(res_weights))/pinn(Xs).T[0].dot(torch.Tensor(res_weights))
     return lam
-#lam_1 = pred_lam(30,pinn_1)
+lam_1 = pred_lam(30,pinn_1)
 lam_2 = pred_lam(30,pinn_2)
 lam_3 = pred_lam(30,pinn_3)
 X_m,Y_m = np.meshgrid(x_t,y_t)
