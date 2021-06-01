@@ -69,7 +69,7 @@ class DirichletBC(BoundaryCondition):
             gt_y = self.func(x)
             if self.norm == 'Mse':
                 zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
-                loss = torch.mean(torch.square(ini_residual))*0#torch.nn.MSELoss()(ini_residual,zeros)
+                loss = torch.mean(torch.square(ini_residual))#torch.nn.MSELoss()(ini_residual,zeros)
             elif self.norm== 'Quad':
                 quad_loss =(np.sum([torch.square(ini_residual[i]) * self.quad_weights[i] for i in
                                      range(len(ini_residual))]) ** (1 / 2))
