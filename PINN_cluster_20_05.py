@@ -459,10 +459,10 @@ model_2 = pf.models.MLP(input_size=3, output_size=1, hidden_size=50, num_hidden=
 model_3 = pf.models.MLP(input_size=3, output_size=1, hidden_size=50, num_hidden=4, lb=lb, ub=ub)
 
 
-performance_var = [initial_condition, [dirichlet_bc], pde_loss]
-#pinn_1 = pf.PINN(model_1, 3, 1, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
-#loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3,
-#                   pinn_path=folder+'best_model_Mse.pt')
+performance_var = [initial_condition_2, [dirichlet_bc_2], pde_loss_2]
+pinn_1 = pf.PINN(model_1, 3, 1, pde_loss,initial_condition, performance_var, [dirichlet_bc], use_gpu=False)
+loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3,
+                   pinn_path=folder+'best_model_Mse.pt')
 pinn_2 = pf.PINN(model_2, 3, 1, pde_loss_2, initial_condition, performance_var, [dirichlet_bc_2] ,use_gpu=False)
 loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+'best_model_Quad.pt')
 pinn_3 = pf.PINN(model_3, 3, 1, pde_loss_3, initial_condition, performance_var, [dirichlet_bc_3] ,use_gpu=False)
@@ -483,8 +483,8 @@ y_t = np.linspace(lb[1], ub[1])
 t = 0
 X_c = torch.tensor([[[i, j, t] for i in x_t] for j in y_t])
 #print(schroedinger1d(X_c, pinn_1(X_c)))
-#pinn_1.load_model(folder+'best_model_Mse.pt')
-#PRED_1 = pinn_1(X_c.float())
+pinn_1.load_model(folder+'best_model_Mse.pt')
+PRED_1 = pinn_1(X_c.float())
 pinn_2.load_model(folder+
                 'best_model_Quad.pt')
 PRED_2 = pinn_2(X_c.float())
@@ -501,13 +501,13 @@ def pred_lam(deg, pinn):
 lam_2 = pred_lam(30,pinn_2)
 lam_3 = pred_lam(30,pinn_3)
 X_m,Y_m = np.meshgrid(x_t,y_t)
-#fig = plt.figure()
-#ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
-#c1 = ax.plot_surface(X_m, Y_m, PRED_1[:,:,0].detach().numpy(),label='Trained Psi',
-#                    color='blue')
-#c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1),label ='Real Psi',color = 'red')
-#plt.savefig(folder + 'MSE_pred.png')
-#plt.show()
+fig = plt.figure()
+ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
+c1 = ax.plot_surface(X_m, Y_m, PRED_1[:,:,0].detach().numpy(),label='Trained Psi',
+                    color='blue')
+c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1),label ='Real Psi',color = 'red')
+plt.savefig(folder + 'MSE_pred.png')
+plt.show()
 lam_pred = lam_pred = pred_lam(30,pinn_3)#torch.median(torch.div(res_right(X_c1,pinn_3(X_c1.float())),
 #                                pinn_3(X_c1.float())[:,0])).detach().numpy()
 lam_pred = "{:.2f}".format(lam_pred)
