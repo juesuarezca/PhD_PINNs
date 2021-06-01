@@ -43,7 +43,7 @@ class PDELoss(LossTerm):
         elif self.norm == 'Quad':
             L2_ip = (pde_residual**2).dot(torch.Tensor(self.quad_weights))**(1/2)
             loss = L2_ip
-         elif self.norm == 'Sobolev_1':
+        elif self.norm == 'Sobolev_1':
             res_weights ,Hkw_res= self.sob_weights
             L2_ip = (pde_residual**2).dot(torch.Tensor(res_weights))**(1/2)
             cxc = torch.outer(pde_residual,pde_residual)
