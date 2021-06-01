@@ -463,13 +463,12 @@ model_3 = pf.models.MLP(input_size=3, output_size=1, hidden_size=50, num_hidden=
 performance_var = [initial_condition, [dirichlet_bc], pde_loss]
 pinn_1 = pf.PINN(model_1, 3, 1, pde_loss,initial_condition_2, performance_var, [dirichlet_bc], use_gpu=False)
 loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3,
-                   pinn_path=folder+'best_model_Mse_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
+                   pinn_path=folder+'_best_model_Mse.pt')
 pinn_2 = pf.PINN(model_2, 3, 1, pde_loss_2, initial_condition_2, performance_var, [dirichlet_bc_2] ,use_gpu=False)
-loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+
-                'best_model_Quad_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
+loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+'_best_model_Quad.pt')
 pinn_3 = pf.PINN(model_3, 3, 1, pde_loss_3, initial_condition_3, performance_var, [dirichlet_bc_3] ,use_gpu=False)
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3,
-                    pinn_path = folder+'best_model_Hk_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
+                    pinn_path = folder+'_best_model_Hk.pt')
 fig = plt.figure()
 # ax2 = fig.add_subplot(2, 1, 1)
 plt.semilogy(loss_1.numpy(), label='MSE Loss')
@@ -485,12 +484,12 @@ y_t = np.linspace(lb[1], ub[1])
 t = 0
 X_c = torch.tensor([[[i, j, t] for i in x_t] for j in y_t])
 #print(schroedinger1d(X_c, pinn_1(X_c)))
-pinn_1.load_model(folder+'best_model_Mse_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
+pinn_1.load_model(folder+'_best_model_Mse.pt')
 PRED_1 = pinn_1(X_c.float())
 pinn_2.load_model(folder+
-                'best_model_Quad_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
+                '_best_model_Quad.pt')
 PRED_2 = pinn_2(X_c.float())
-pinn_3.load_model(folder+'best_model_Hk_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
+pinn_3.load_model(folder+'_best_model_Hk.pt')
 PRED_3 = pinn_3(X_c.float())
 ##Compute the lambda 
 def pred_lam(deg, pinn):
