@@ -24,7 +24,6 @@ USEDATA = False
 lb = np.array([-1.0, -1.0, 0.0])
 ub = np.array([1.0, 1.0, 0])
 # Number of Epoch
-n_epoch = 5000
 #Create 2-D Dataset from the analytical solution
 def set_gen_1d(POLYDEG,n_bdy):
     unscaled_pts = np.polynomial.legendre.leggauss(POLYDEG)
