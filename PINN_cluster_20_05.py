@@ -217,86 +217,101 @@ class PDEDataset(Dataset):
         There exists no batch processing. So the size is 1
         """
         return 1
-def H1_coeff(deg, residual_bdy):
+def Hk_coeff(deg, k_sob):
     mi = mp.multi_index.MultiIndex.from_degree(spatial_dimension=2, poly_degree=deg, lp_degree=np.inf)
     ord_grid =mp.grid.Grid(mi).unisolvent_nodes
     can_bdy = np.array([[-1, -1, 0], [1, 1, 0]])
+    residual_bdy = can_bdy
     un_grid = set_gen_sob(deg+1, can_bdy, 
                          np.polynomial.legendre.leggauss(deg+1)[0],
-                         np.polynomial.legendre.leggauss(deg+1)[1])[0][:,0:2]#
-    scaled_grid = set_gen_sob(deg+1, residual_bdy, 
-                         np.polynomial.legendre.leggauss(deg+1)[0],
-                         np.polynomial.legendre.leggauss(deg+1)[1])
+                         np.polynomial.legendre.leggauss(deg+1)[1])[0]
     un_weights = set_gen_sob(deg+1, can_bdy, 
                          np.polynomial.legendre.leggauss(deg+1)[0],
                          np.polynomial.legendre.leggauss(deg+1)[1])[1]#np.polynomial.legendre.leggauss(n+1)[1]
-    print(un_grid.shape)
     ord_index = [[ i for i,j in enumerate(un_grid) if j[0] == ord_grid[k][0] and 
                  j[1] == ord_grid[k][1]][0] for k in range(len(ord_grid))]
     ord_sc_weights = un_weights[ord_index]
-    ord_sc_grid = scaled_grid[0][ord_index]
-    coeff_L_x = []
-    coeff_L_y = []
-    gridx = 1
-    for i in range(len(mi)):
-        alpha = np.zeros(len(mi))
-        alpha[i] = 1 
-        #custom_grid = mp.Grid(mi,generating_values = grid_r[0][:,0])
-        lag_poly = mp.LagrangePolynomial(alpha, mi)
-        derivator_lag_poly = mp.Derivator(lag_poly, mp.LagrangePolynomial)
-        d_c = derivator_lag_poly.get_gradient_poly().coeffs
-        #alpha = np.divide(1,(1+d_c))
-        #sobolev_w = np.divide(lag_poly.coeffs,2)
-        coeff_L_x.append(d_c[:,0])
-        coeff_L_y.append(d_c[:,1])
-    h_w_x = torch.einsum('ab,b->ab',
-             torch.tensor(coeff_L_x),torch.Tensor(ord_sc_weights))
-    h_w_y = torch.einsum('ab,b->ab',
-                 torch.tensor(coeff_L_y),torch.Tensor(ord_sc_weights))
-    H_x = torch.einsum('ab,cb->ac',torch.tensor(coeff_L_x), h_w_x)
-    H_y = torch.einsum('ab,cb->ac',torch.tensor(coeff_L_y), h_w_y)
-    #Compute H2 inner product
-    HxH_x=torch.einsum('ab,cd->abcd',torch.tensor(coeff_L_x),torch.tensor(coeff_L_x))
-    HxH_y=torch.einsum('ab,cd->abcd',torch.tensor(coeff_L_y),torch.tensor(coeff_L_y))
-    H_xx = torch.einsum('abcd,bd->ac',HxH_x,H_x) 
-    H_xy = torch.einsum('abcd,bd->ac',HxH_x,H_y)
-    H_yy = torch.einsum('abcd,bd->ac',HxH_y,H_y)
-    #H_xx, H_xy, H_yy = [[],[],[]]
-    return ord_sc_grid.T, ord_sc_weights, H_x, H_y, H_xx, H_xy, H_yy
-def H1_coeff_bdy(deg):
+    ord_sc_grid = un_grid[ord_index]
+    W_HK = []
+    if k_sob == 1 or k_sob == 2 or k_sob ==3 or k_sob==4:
+        coeff_L_x = []
+        coeff_L_y = []
+        for i in range(len(mi)):
+            alpha = np.zeros(len(mi))
+            alpha[i] = 1 
+            #custom_grid = mp.Grid(mi,generating_values = grid_r[0][:,0])
+            lag_poly = mp.LagrangePolynomial(alpha, mi)
+            derivator_lag_poly = mp.Derivator(lag_poly, mp.LagrangePolynomial)
+            d_c = derivator_lag_poly.get_gradient_poly().coeffs
+            #alpha = np.divide(1,(1+d_c))
+            #sobolev_w = np.divide(lag_poly.coeffs,2)
+            coeff_L_x.append(d_c[:,0])
+            coeff_L_y.append(d_c[:,1])
+        h_w_x = torch.einsum('ab,b->ab',
+                 torch.tensor(coeff_L_x),torch.Tensor(ord_sc_weights))
+        h_w_y = torch.einsum('ab,b->ab',
+                     torch.tensor(coeff_L_y),torch.Tensor(ord_sc_weights))
+        H_x = torch.einsum('ab,cb->ac',torch.tensor(coeff_L_x), h_w_x)
+        H_y = torch.einsum('ab,cb->ac',torch.tensor(coeff_L_y), h_w_y)
+        H_1 = [H_x, H_y]
+        W_HK.append(H_1)
+        if k_sob == 2 or k_sob ==3 or k_sob==4:
+            HxH_x=torch.einsum('ab,cd->abcd',torch.tensor(coeff_L_x),torch.tensor(coeff_L_x))
+            HxH_y=torch.einsum('ab,cd->abcd',torch.tensor(coeff_L_y),torch.tensor(coeff_L_y))
+            HxH = [HxH_x, HxH_y]
+            ind_H2 = [[0,0],[0,1],[1,1]]
+            H_2 = []
+            for i in range(len(ind_H2)):
+                H_2.append(torch.einsum('abcd,bd->ac',HxH[ind_H2[i][0]],H_1[ind_H2[i][1]]))
+            W_HK.append(H_2)
+            if  k_sob == 3 or k_sob == 4:
+                H_3 = []
+                ind_H3 = [[0,0], [0,1],[0,2],[1,0],[1,2]]
+                for i in range(len(ind_H3)):
+                    H_3.append(torch.einsum('abcd,bd->ac',
+                                            HxH[ind_H3[i][0]],H_2[ind_H3[i][1]]))
+                W_HK.append(H_3)
+                if k_sob == 4:
+                    H_4 = []
+                    ind_H4 = [[0,0],[0,1],[0,2],[0,3],[0,4],[1,0],[1,3],[1,4]]
+                    for i in range(len(ind_H4)):
+                        H_4.append(torch.einsum('abcd,bd->ac',HxH[ind_H4[i][0]],
+                                                H_3[ind_H4[i][1]]))
+                    W_HK.append(H_4)
+    return ord_sc_grid.T, ord_sc_weights, W_HK
+def Hk_coeff_bdy(deg, k_sob):
     mi = mp.multi_index.MultiIndex.from_degree(spatial_dimension=1, poly_degree=deg, lp_degree=np.inf)
-    ord_grid = mp.grid.Grid(mi).unisolvent_nodes
-    un_grid = np.polynomial.legendre.leggauss(deg+1)[0]
-    un_weights = np.polynomial.legendre.leggauss(deg+1)[1]
-    ord_index = [[ i for i,j in enumerate(un_grid) if j == ord_grid[k][0]][0]for 
-                  k in range(len(ord_grid))]
+    ord_grid =mp.grid.Grid(mi).unisolvent_nodes.T[0]
+    un_grid , un_weights = np.polynomial.legendre.leggauss(deg+1)
+    ord_index = [[ i for i,j in enumerate(un_grid) if j == ord_grid[k]][0]
+                 for k in range(len(ord_grid))]
     ord_sc_weights = un_weights[ord_index]
-    ord_sc_grid = un_grid[ord_index]#scaled_grid[0][ord_index]
-    coeff_L_x = []
-    coeff_L_y = []
-    mi_2d = mp.multi_index.MultiIndex.from_degree(spatial_dimension=1, poly_degree=deg, lp_degree=np.inf)
-    for i in range(len(mi_2d)):
-        alpha = np.zeros(len(mi_2d))
-        alpha[i] = 1 
-        lag_poly = mp.LagrangePolynomial(alpha, mi_2d)
-        derivator_lag_poly = mp.Derivator(lag_poly, mp.LagrangePolynomial)
-        d_c = derivator_lag_poly.get_gradient_poly().coeffs
-        coeff_L_x.append(d_c[:,0])
-        coeff_L_y.append(d_c[:,0])
-    h_w_x = torch.einsum('ab,b->ab',
-             torch.tensor(coeff_L_x),torch.Tensor(ord_sc_weights))
-    H_x = torch.einsum('ab,cb->ac',torch.tensor(coeff_L_x), h_w_x)
-    #h_w_y = torch.einsum('ab,b->ab',
-    #         torch.tensor(coeff_L_y),torch.Tensor(ord_sc_weights))
-    #H_y = torch.einsum('ab,cb->ac',torch.tensor(coeff_L_y), h_w_y)
-    #H2 inner product 
-    #H_xx, H_xy, H_yy = [[],[],[]]
-    HxH_x=torch.einsum('ab,cd->abcd',torch.tensor(coeff_L_x),torch.tensor(coeff_L_x))
-    #HxH_y=torch.einsum('ab,cd->abcd',torch.tensor(coeff_L_y),torch.tensor(coeff_L_y))
-    H_xx = torch.einsum('abcd,bd->ac',HxH_x,H_x) 
-    #H_xy = torch.einsum('abcd,bd->ac',HxH_x,H_y)
-    #H_yy = torch.einsum('abcd,bd->ac',HxH_y,H_y)
-    return ord_sc_grid, ord_sc_weights, H_x,H_xx,# H_y,  H_yy#, H_xy, H_yy
+    ord_sc_grid = un_grid[ord_index]
+    weights = []
+    if k_sob == 1 or k_sob == 2 or k_sob ==3 or k_sob==4:
+        coeff_L_x = []
+        for i in range(len(mi)):
+            alpha = np.zeros(len(mi))
+            alpha[i] = 1 
+            lag_poly = mp.LagrangePolynomial(alpha, mi)
+            derivator_lag_poly = mp.Derivator(lag_poly, mp.LagrangePolynomial)
+            d_c = derivator_lag_poly.get_gradient_poly().coeffs
+            coeff_L_x.append(d_c[:,0])
+        h_w_x = torch.einsum('ab,b->ab',
+                 torch.tensor(coeff_L_x),torch.Tensor(ord_sc_weights))
+        H_1 = torch.einsum('ab,cb->ac',torch.tensor(coeff_L_x), h_w_x)
+        weights.append(H_1)
+        if k_sob == 2 or k_sob ==3 or k_sob==4:
+            HxH_x=torch.einsum('ab,cd->abcd',torch.tensor(coeff_L_x),torch.tensor(coeff_L_x)) 
+            H_2 = torch.einsum('abcd,bd->ac',HxH_x,H_1)
+            weights.append(H_2)
+            if  k_sob == 3 or k_sob == 4:
+                H_3 = torch.einsum('abcd,bd->ac',HxH_x,H_2)
+                weights.append(H_3)
+                if k_sob == 4:
+                    H_4 = torch.einsum('abcd,bd->ac',HxH_x,H_3)
+                    weights.append(H_4)
+    return ord_sc_grid, ord_sc_weights, weights
 if __name__ == "__main__":
     # Domain bounds
     #Create Datasets for the different Losses
@@ -395,16 +410,16 @@ if __name__ == "__main__":
             #Hb_x, Hb_y,Hb_xx, Hb_xy, Hb_yy = [[],[],[],[],[]]
             Datasets = [[boundary_set, residual_set, initial_set],[boundary_weights, residual_weights, initial_weights]]
         elif Norm == 'Sobolev_1':
-            initial_set, initial_weights,Hi_x, Hi_y, Hi_xx, Hi_xy, Hi_yy = H1_coeff(deg, initial_bdy)
-            residual_set, res_weights ,Hr_x, Hr_y, Hr_xx, Hr_xy, Hr_yy = H1_coeff(deg, residual_bdy)
+            initial_set, initial_weights, Hkw_ini = Hk_coeff(deg,1)
+            residual_set, res_weights , Hkw_res = Hk_coeff(deg,2)
             #Create Boundary Set
-            boundary_set, boundary_weights, Hb_x, Hb_xx = H1_coeff_bdy(int(deg*deg/4))
+            boundary_set, boundary_weights, Hkw_bdy = Hk_coeff_bdy(int(deg*deg/4), 3)
             #boundary_set = np.concatenate([set_gen_1d(deg, boundary_bdy[i])[0] for i in range(4)], axis=0)
             #boundary_weights = np.concatenate([set_gen_1d(deg, boundary_bdy[i])[1] for i in range(4)], axis=0)
             Datasets = [[boundary_set, residual_set, initial_set],
-                        [[boundary_weights, Hb_x, Hb_xx], 
-                         [res_weights ,Hr_x, Hr_y, Hr_xx, Hr_xy, Hr_yy],
-                         [initial_weights, Hi_x, Hi_y, Hi_xx, Hi_xy, Hi_yy]]]
+                        [[boundary_weights, Hkw_bdy], 
+                         [res_weights , Hkw_res],
+                         [initial_weights, Hkw_ini]]]
             ### CREATE THE LOSS FUNCTIONS
         else:
             raise(ValueError('Loss not defined'))
@@ -429,7 +444,7 @@ if __name__ == "__main__":
                                                 norm=Norm, sob_weights=Datasets[1][2])
         #test_loss = tl.My_Loss(ic_dataset,  quad_weights=Datasets[1][2], norm=Norm)
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
-folder = '/Results_Simulation/28.04/'+str(e_l)+'_'+str(n_epoch)
+folder = '/Results_Simulation/01.06/'+str(e_l)+'_'+str(n_epoch)
 # Call the datasets functions, losses and weights for the training and for the performance measure
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
@@ -446,12 +461,12 @@ model_3 = pf.models.MLP(input_size=3, output_size=1, hidden_size=50, num_hidden=
 
 
 performance_var = [initial_condition, [dirichlet_bc], pde_loss]
-#pinn_1 = pf.PINN(model_1, 3, 1, pde_loss,initial_condition_2, performance_var, [dirichlet_bc], use_gpu=False)
-#loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3,
-#                   pinn_path=folder+'best_model_Mse_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
-#pinn_2 = pf.PINN(model_2, 3, 1, pde_loss_2, initial_condition_2, performance_var, [dirichlet_bc_2] ,use_gpu=False)
-#loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+
-#                'best_model_Quad_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
+pinn_1 = pf.PINN(model_1, 3, 1, pde_loss,initial_condition_2, performance_var, [dirichlet_bc], use_gpu=False)
+loss_1 = pinn_1.fit(n_epoch, 'Adam', 1e-3,
+                   pinn_path=folder+'best_model_Mse_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
+pinn_2 = pf.PINN(model_2, 3, 1, pde_loss_2, initial_condition_2, performance_var, [dirichlet_bc_2] ,use_gpu=False)
+loss_2= pinn_2.fit(n_epoch, 'Adam', 1e-3,pinn_path=folder+
+                'best_model_Quad_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
 pinn_3 = pf.PINN(model_3, 3, 1, pde_loss_3, initial_condition_3, performance_var, [dirichlet_bc_3] ,use_gpu=False)
 loss_3 = pinn_3.fit(n_epoch, 'Adam', 1e-3,
                     pinn_path = folder+'best_model_Wass_'+str(DEG)+'_'+str(n_epoch)+'_.pt')
@@ -462,7 +477,7 @@ plt.semilogy(loss_2.numpy(), label='Quadrature Loss')
 plt.semilogy(loss_3.numpy(), label='Wasserstein Loss')
 plt.legend()
 plt.ylim(0,0.5)
-#plt.savefig(folder + 'Loss_Wass.png')
+plt.savefig(folder + 'Loss_Wass.png')
 plt.show()
 
 x_t = np.linspace(lb[0], ub[0])
@@ -476,10 +491,35 @@ pinn_2.load_model(folder+'best_model_Quad.pt')
 PRED_2 = pinn_2(X_c.float())
 pinn_3.load_model(folder+'best_model_Mse.pt')
 PRED_3 = pinn_3(X_c.float())
+##Compute the lambda 
+def pred_lam(deg, pinn):
+    residual_set, res_weights , Hkw_res = Hk_coeff(deg,0)
+    Xs = torch.Tensor(residual_set).T
+    Xs.requires_grad = True
+    lam = res_right(Xs,pinn(Xs)).dot(torch.Tensor(res_weights))/pinn(Xs).T[0].dot(torch.Tensor(res_weights))
+    return lam
+lam_1 = pred_lam(30,pinn_1)
+lam_2 = pred_lam(30,pinn_2)
+lam_3 = pred_lam(30,pinn_3)
 X_m,Y_m = np.meshgrid(x_t,y_t)
 fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
 c1 = ax.plot_surface(X_m, Y_m, PRED_1[:,:,0].detach().numpy(),label='Trained Psi',
                     color='blue')
 c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real,label ='Real Psi',color = 'red')
+plt.savefig(folder + 'MSE_pred.png')
+plt.show()
+fig = plt.figure()
+ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
+c1 = ax.plot_surface(X_m, Y_m, PRED_2[:,:,0].detach().numpy(),label='Trained Psi',
+                    color='blue')
+c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real,label ='Real Psi',color = 'red')
+plt.savefig(folder + 'L2Quad_pred.png')
+plt.show()
+fig = plt.figure()
+ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
+c1 = ax.plot_surface(X_m, Y_m, PRED_3[:,:,0].detach().numpy(),label='Trained Psi',
+                    color='blue')
+c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1).real,label ='Real Psi',color = 'red')
+plt.savefig(folder + 'Hk_pred.png')
 plt.show()

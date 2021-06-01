@@ -30,7 +30,7 @@ class DirichletBC(BoundaryCondition):
     def __call__(self, x, model):
         if self.norm == 'Sobolev_1'or self.norm == 'Quad_new':
             bdy_set = x
-            bdy_weights, Hb_x, Hb_xx = self.sob_weights
+            bdy_weights, Hkw_bdy= self.sob_weights
             bdy_weights = torch.Tensor(bdy_weights)
             lb_line = np.linspace(min(bdy_set),min(bdy_set),len(bdy_set))
             ub_line = np.linspace(max(bdy_set),max(bdy_set),len(bdy_set))
@@ -58,15 +58,11 @@ class DirichletBC(BoundaryCondition):
                 cxc_2 = torch.outer(f_2,f_2)
                 cxc_3 = torch.outer(f_3,f_3)
                 cxc_4 = torch.outer(f_4,f_4)
-                dx_b = torch.sum(cxc_1*Hb_x)+ torch.sum(cxc_2*Hb_x)
-                #dy_b = torch.sum(cxc_3*Hb_y)+ torch.sum(cxc_4*Hb_y)
-                H1_ip =  dx_b #+ dy_b
-                CXC = [cxc_1, cxc_2, cxc_3, cxc_4]
-                DXX = [torch.sum(CXC[i]*Hb_xx) for i in range(len(CXC))]
-                #DXY = [torch.sum(CXC[i]*Hb_xy) for i in range(len(CXC))]
-                #DYY = [torch.sum(CXC[i]*Hb_yy) for i in range(len(CXC))]
-                H2_ip = np.sum(DXX)#+np.sum(DYY)
-                loss = L2_ip**(1/2)+H1_ip**(1/2)+H2_ip**(1/2)       
+                H_k = (np.sum([torch.sum(cxc_1*Hkw_bdy[i])**(1/2) for i in range(len(Hkw_bdy))])+
+                np.sum([torch.sum(cxc_2*Hkw_bdy[i])**(1/2) for i in range(len(Hkw_bdy))])+
+                np.sum([torch.sum(cxc_3*Hkw_bdy[i])**(1/2) for i in range(len(Hkw_bdy))])+
+                np.sum([torch.sum(cxc_4*Hkw_bdy[i])**(1/2) for i in range(len(Hkw_bdy))]))
+                loss = L2_ip**(1/2)+ H_k   
         else:
             prediction = model(x)[:,0] # is equal to y
             ini_residual = (prediction - self.func(x))
