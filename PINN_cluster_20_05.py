@@ -508,17 +508,26 @@ X_m,Y_m = np.meshgrid(x_t,y_t)
 #c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1),label ='Real Psi',color = 'red')
 #plt.savefig(folder + 'MSE_pred.png')
 #plt.show()
+lam_pred = lam_pred = pred_lam(30,pinn_3)#torch.median(torch.div(res_right(X_c1,pinn_3(X_c1.float())),
+#                                pinn_3(X_c1.float())[:,0])).detach().numpy()
+lam_pred = "{:.2f}".format(lam_pred)
+fig = plt.figure()
+ax = fig.gca(projection='3d')#
+c2 = ax.plot_surface(X_m, Y_m, PRED_3[:, :, 0].detach().numpy(), label='Trained Psi_wass',
+                    color='orange')
+c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,1,e_l),label ='Real Psi',color = 'red')
+plt.title('$\lambda$: '+str(lam)+', Deg: '+str(DEG)+', $\lambda$_p: '+str(lam_pred))
 fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
-c1 = ax.plot_surface(X_m, Y_m, PRED_2[:,:,0].detach().numpy(),label='Trained Psi',
-                    color='blue')
-c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1),label ='Real Psi',color = 'red')
+c2 = ax.plot_surface(X_m, Y_m, PRED_2[:, :, 0].detach().numpy(), label='Trained Psi_wass',
+                    color='Blue')
+c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,1,e_l),label ='Real Psi',color = 'red')
 plt.savefig(folder + 'L2Quad_pred.png')
 plt.show()
 fig = plt.figure()
 ax = fig.gca(projection='3d')#fig.add_subplot(2, 1, 2, projection='3d')
-c1 = ax.plot_surface(X_m, Y_m, PRED_3[:,:,0].detach().numpy(),label='Trained Psi',
-                    color='blue')
-c3 = ax.plot_surface(X_m, Y_m, Psi(X_m,Y_m,0,1),label ='Real Psi',color = 'red')
+c2 = ax.plot_surface(X_m, Y_m, PRED_3[:, :, 0].detach().numpy(), label='Trained Psi_wass',
+                    color='orange')
+c3 = ax.plot_wireframe(X_m, Y_m, Psi(X_m,Y_m,1,e_l),label ='Real Psi',color = 'red')
 plt.savefig(folder + 'Hk_pred.png')
 plt.show()
