@@ -444,7 +444,7 @@ if __name__ == "__main__":
                                                 norm=Norm, sob_weights=Datasets[1][2])
         #test_loss = tl.My_Loss(ic_dataset,  quad_weights=Datasets[1][2], norm=Norm)
         return [dirichlet_bc, pde_loss, initial_condition], [bc_dataset, pde_dataset, ic_dataset], Datasets[1]
-folder = '/Results_Simulation/03.05/'
+folder = 'Results_Simulation/01.06/'
 # Call the datasets functions, losses and weights for the training and for the performance measure
 [dirichlet_bc_2, pde_loss_2, initial_condition_2], [bc_dataset_2, pde_dataset_2, ic_dataset_2], [boundary_weights_2,
                                                                                      residual_weights_2,
@@ -484,12 +484,12 @@ y_t = np.linspace(lb[1], ub[1])
 t = 0
 X_c = torch.tensor([[[i, j, t] for i in x_t] for j in y_t])
 #print(schroedinger1d(X_c, pinn_1(X_c)))
-pinn_1.load_model(folder+'_best_model_Mse.pt')
+pinn_1.load_model(folder+'best_model_Mse.pt')
 PRED_1 = pinn_1(X_c.float())
 pinn_2.load_model(folder+
-                '_best_model_Quad.pt')
+                'best_model_Quad.pt')
 PRED_2 = pinn_2(X_c.float())
-pinn_3.load_model(folder+'_best_model_Hk.pt')
+pinn_3.load_model(folder+'best_model_Hk.pt')
 PRED_3 = pinn_3(X_c.float())
 ##Compute the lambda 
 def pred_lam(deg, pinn):
