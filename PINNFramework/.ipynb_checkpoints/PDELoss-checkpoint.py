@@ -23,6 +23,7 @@ class PDELoss(LossTerm):
         self.pde = pde
         self.quad_weights = quad_weights
         self.norm = norm
+        print(norm)
         self.func_left = func_left
         self.func_right = func_right
         self.reg_par = reg_param_w
@@ -41,15 +42,32 @@ class PDELoss(LossTerm):
             zeros = torch.zeros(pde_residual.shape, device=pde_residual.device)
             loss = torch.nn.MSELoss()(pde_residual, zeros)
         elif self.norm == 'Quad':
-            L2_ip = (pde_residual**2).dot(torch.Tensor(self.quad_weights))
+            #L2_ip = (pde_residual**2).dot(torch.Tensor(self.quad_weights))
+            res_weights ,Hkw_res= self.sob_weights
+            L2_ip = (pde_residual**2).dot(torch.Tensor(res_weights))
             loss = L2_ip
+        elif self.norm == 'Sobolev_1_dec':
+            u = model.forward(x)
+            pde_residual = self.pde(x, u, **kwargs)
+            W_k, W_2 = self.sob_weights
+            Hk_ip = []
+            L2_ip = (pde_residual**2).dot(torch.Tensor(W_2))
+            len_W0 =len(W_k[0][0][0])
+            Hk_ip = []
+            pde_residual = pde_residual.reshape(len(W_k),int(len(pde_residual)/len(W_k)))
+            for k in range(len(W_k)):
+                for i in range(len(W_k[k])):
+                    for j in range(len(W_k[k][i])):
+                        cxc = torch.outer(pde_residual[k], pde_residual[k])
+                        Hk_ip.append(torch.sum(cxc*W_k[k][i][j]))
+            loss = L2_ip+np.sum(Hk_ip) #+ (u[:,0].dot(torch.Tensor(res_weights)))**2
         elif self.norm == 'Sobolev_1':
             res_weights ,Hkw_res= self.sob_weights
             L2_ip = (pde_residual**2).dot(torch.Tensor(res_weights))
             cxc = torch.outer(pde_residual,pde_residual)
             H_k = np.sum([np.sum([torch.sum(cxc*Hkw_res[i][k]) for k in range(len(Hkw_res[i]))]) for i in range(len(Hkw_res))])
-            norm_loss = 0#(model.forward(x)[:,0].dot(torch.Tensor(res_weights))-1)**(2)
-            print('PDE Loss', L2_ip,H_k)
+            #norm_loss = 0#(model.forward(x)[:,0].dot(torch.Tensor(res_weights))-1)**(2)
+            print('PDE Loss',([[torch.sum(cxc*Hkw_res[i][k]) for k in range(len(Hkw_res[i]))] for i in range(len(Hkw_res))]))
             loss = L2_ip+H_k
             #print('residual',L2_ip**(1/2),np.sum([torch.sum(cxc*Hkw_res[i][0]) for k in range(len(Hkw_res[i]))])**(1/2),
             #     np.sum([torch.sum(cxc*Hkw_res[i][0]) for k in range(len(Hkw_res[i]))])**(1/2))
@@ -137,4 +155,4 @@ class PDELoss(LossTerm):
             loss = sinkhorn_loss(u_r, v_r, M, self.reg_par, 200)
         else:
             raise ValueError('Loss not defined')
-        return loss*self.weight*0
+        return loss*self.weight

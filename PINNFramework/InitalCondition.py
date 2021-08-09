@@ -1,4 +1,3 @@
-
 from .LossTerm import LossTerm
 from torch.nn import Module
 from torch import Tensor
@@ -38,16 +37,33 @@ class InitialCondition(LossTerm):
             zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
             loss = torch.nn.MSELoss()(ini_residual,zeros)
         elif self.norm== 'Quad':
-            quad_loss = (ini_residual[:,0]**2).dot(torch.Tensor(self.quad_weights))
-            loss = (quad_loss)
-        elif self.norm == 'Sobolev_1':
+            #quad_loss = (ini_residual[:,0]**2).dot(torch.Tensor(self.quad_weights))
             ini_weights , Hkw_ini = self.sob_weights
             #L2_ip =(np.sum([torch.square(pde_residual[i]) * ord_sc_weights[i] for i in
             #                     range(len(pde_residual))]) ** (1 / 2))
             L2_ip = (ini_residual[:,0]**2).dot(torch.Tensor(ini_weights))
+            loss = L2_ip
+        elif self.norm == 'Sobolev_1_dec':
+            W_k, W_2 = self.sob_weights
+            Hk_ip = []
+            L2_ip = (ini_residual[:,0]**2).dot(torch.Tensor(W_2))
+            norm_loss = (ini_residual[:,0].dot(torch.Tensor(W_2))-1)**2
+            len_W0 =len(W_k[0][0][0])
+            Hk_ip = []
+            ini_residual = ini_residual.reshape(len(W_k),int(len(ini_residual)/len(W_k)))
+            for k in range(len(W_k)):
+                for i in range(len(W_k[k])):
+                    for j in range(len(W_k[k][i])):
+                        cxc = torch.outer(ini_residual[k], ini_residual[k])
+                        Hk_ip.append(torch.sum(cxc*W_k[k][i][j]))
+            #loss = L2_ip+torch.sum(torch.Tensor(Hk_ip)) #+ (u[:,0].dot(torch.Tensor(res_weights)))**2
+            loss = norm_loss
+        elif self.norm == 'Sobolev_1':
+            ini_weights , Hkw_ini = self.sob_weights
+            L2_ip = (ini_residual[:,0]**2).dot(torch.Tensor(ini_weights))
             cxc = torch.outer(ini_residual[:,0], ini_residual[:,0])
             H_k = np.sum([np.sum([torch.sum(cxc*Hkw_ini[i][k]) for k in range(len(Hkw_ini[i]))]) for i in range(len(Hkw_ini))])
-            print([np.sum([torch.sum(cxc*Hkw_ini[i][k]) for k in range(len(Hkw_ini[i]))]) for i in range(len(Hkw_ini))])
+            print('ini terms',[[torch.sum(cxc*Hkw_ini[i][k]) for k in range(len(Hkw_ini[i]))] for i in range(len(Hkw_ini))])
             loss = (L2_ip+H_k)
             print('Initial Loss', L2_ip, H_k)
         elif self.norm == 'Wass2':
@@ -146,5 +162,4 @@ class InitialCondition(LossTerm):
             loss = sinkhorn_loss(u_r, v_r, M, 0.2, 200)
         else:
             raise ValueError('Loss not defined')
-            
         return loss*self.weight

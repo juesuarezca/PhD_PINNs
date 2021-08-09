@@ -28,22 +28,22 @@ class DirichletBC(BoundaryCondition):
         self.reg_par = reg_param_w
         self.sob_weights = sob_weights
     def __call__(self, x, model):
-        if self.norm == 'Sobolev_1'or self.norm == 'Quad_new':
+        if self.norm == 'Sobolev_1'or self.norm == 'Quad':
             bdy_set = x
             bdy_weights, Hkw_bdy= self.sob_weights
             bdy_weights = torch.Tensor(bdy_weights)
             lb_line = np.linspace(min(bdy_set),min(bdy_set),len(bdy_set))
             ub_line = np.linspace(max(bdy_set),max(bdy_set),len(bdy_set))
-            zero_time = np.linspace(0,0,len(bdy_set))
-            x_1= torch.Tensor(list(zip(bdy_set,lb_line,zero_time)))
-            x_2 = torch.Tensor(list(zip(bdy_set,ub_line,zero_time)))
-            x_3 = torch.Tensor(list(zip(lb_line,bdy_set,zero_time)))
-            x_4 = torch.Tensor(list(zip(ub_line,bdy_set,zero_time)))
+            #zero_time = np.linspace(0,0,len(bdy_set))
+            x_1= torch.Tensor(list(zip(bdy_set,lb_line)))
+            x_2 = torch.Tensor(list(zip(bdy_set,ub_line)))
+            x_3 = torch.Tensor(list(zip(lb_line,bdy_set)))
+            x_4 = torch.Tensor(list(zip(ub_line,bdy_set)))
             f_1 = -model(x_1)[:,0]+self.func(x_1)
             f_2 = -model(x_2)[:,0]+self.func(x_2)
             f_3 = -model(x_3)[:,0]+self.func(x_3)
             f_4 = -model(x_4)[:,0]+self.func(x_4)
-            if self.norm == 'Quad_new':
+            if self.norm == 'Quad':
                 L2_ip = (((f_1)**2).dot(bdy_weights)+
                          ((f_2)**2).dot(bdy_weights)+
                         ((f_3)**2).dot(bdy_weights)+
@@ -79,7 +79,7 @@ class DirichletBC(BoundaryCondition):
             if self.norm == 'Mse':
                 zeros = torch.zeros(ini_residual.shape, device=ini_residual.device)
                 loss = torch.mean(torch.square(ini_residual))#torch.nn.MSELoss()(ini_residual,zeros)
-            elif self.norm== 'Quad':
+            elif self.norm== 'Quad_old':
                 quad_loss =(np.sum([torch.square(ini_residual[i]) * self.quad_weights[i] for i in
                                      range(len(ini_residual))]))
                 loss = quad_loss
